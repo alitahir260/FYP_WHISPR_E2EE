@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,15 +23,35 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        
-        $request->authenticate();
 
+        // $request->authenticate();
+
+        // $request->session()->regenerate();
+
+
+        $request->validate([
+            'phone' => ['required', 'string'],
+        ]);
+
+        // Check if the user with the given phone number exists
+        $user = User::where('phone', $request->phone)->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'phone' => 'The provided phone number does not match our records.',
+            ]);
+        }
+
+        // Log the user in (without password check)
+        Auth::login($user);
+
+        // Regenerate session
         $request->session()->regenerate();
 
         // return redirect()->intended(route('dashboard', absolute: false));
-        return redirect()->route('validate_pin');
+        return redirect()->route('profile.validate.pin');
     }
 
     /**
@@ -38,6 +59,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+    
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
