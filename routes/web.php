@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return view('chat-panel');
 })->middleware(['auth', 'verified','check.pin'])->name('dashboard');
 
 Route::middleware('auth','check.pin')->group(function () {
