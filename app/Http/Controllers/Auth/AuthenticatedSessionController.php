@@ -59,13 +59,20 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-    
+
+        //TemporaryWorkaround
         Auth::guard('web')->logout();
+        return redirect('/login');
 
-        $request->session()->invalidate();
 
-        $request->session()->regenerateToken();
+        //orignal Code
+        // Auth::guard('web')->logout();
 
-        return redirect('/');
+        // $request->session()->invalidate();
+
+        // $request->session()->regenerateToken();
+
+        // return redirect('/');
     }
 }
+//REAL or FAKE
