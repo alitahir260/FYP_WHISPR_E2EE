@@ -3198,4 +3198,4 @@
     document.onkeypress = resetTimer;
     document.onscroll = resetTimer;
 </script>
-
+{{-- full updated --}}
