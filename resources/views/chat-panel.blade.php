@@ -3141,7 +3141,7 @@
                 <button type="button" class="btn btn-light w-100" id="reset-layout">Reset</button>
             </div>
             <div class="col-6">
-                <a href="https://1.envato.market/velzon-admin" target="_blank" class="btn btn-primary w-100">Buy
+                <a href="https://1.envato.market/velzon-admin" target="_blank" class="btn btn-primary w-100">Buy it
                     Now</a>
             </div>
         </div>
