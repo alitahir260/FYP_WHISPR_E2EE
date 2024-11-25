@@ -104,4 +104,10 @@ class ProfileController extends Controller
             return back()->withErrors(['password' => 'The provided PIN is incorrect.']);
         }
     }
+
+    public function validate_otp()
+    {
+
+        return view('auth.enter-otp');
+    }
 }

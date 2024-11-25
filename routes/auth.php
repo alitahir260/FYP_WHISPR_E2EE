@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
 
                 Route::get('validate_pin',[ProfileController::class, 'validate_pin'])->name('profile.validate.pin');
                 Route::post('auth_pin',[ProfileController::class, 'auth_pin'])->name('profile.auth.pin');
-
+                Route::get('validate_otp',[ProfileController::class, 'validate_otp'])->name('profile.validate.otp');
 
 
 
