@@ -16,9 +16,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'phone' , 'password' , 'name'
-    ];
+    protected $fillable = ['name', 'phone', 'password'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -38,15 +36,20 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            // 'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
+        // contacst that the logged in user has saved
+        public function contacts()
+        {
+            return $this->hasMany(Contact::class, 'user_id');
+        }
 
-    public function contacts()
-    {
-        return $this->hasMany(Contact::class);
-    }
+        public function addedByUsers()
+        {
+             return $this->hasMany(Contact::class, 'contact_user_id');
+        }
 
 }

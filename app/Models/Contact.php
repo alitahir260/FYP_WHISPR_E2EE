@@ -14,7 +14,7 @@ class Contact extends Model
 
 
     protected $fillable = [
-        'phone', 'user_id', 'name',
+        'phone', 'user_id', 'name' , 'contact_user_id',
     ];
 
     /**
@@ -24,4 +24,19 @@ class Contact extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The user who is the contact (the one being added).
+     */
+    public function contactUser()
+    {
+        return $this->belongsTo(User::class, 'contact_user_id');
+    }
+
 }

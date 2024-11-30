@@ -16,6 +16,18 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
+
+        public function dashboard()
+        {
+            $user = Auth::user();
+            // dd($user->toArray());
+            $contacts = $user->contacts()->with('contactUser')->get();
+                // Pass user data to the view
+                return view('chat-panel', compact('user','contacts'));
+        }
+
+
+
     public function edit(Request $request): View
     {
         return view('profile.edit', [

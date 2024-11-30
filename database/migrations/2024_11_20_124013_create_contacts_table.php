@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('contacts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Foreign key referencing users table
+            $table->id(); // Contact ID
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // The user who added this contact
+            $table->foreignId('contact_user_id')->constrained('users')->onDelete('cascade'); // The contact being added
             $table->string('name'); // Contact's name
-            $table->string('phone')->unique(); // Contact's phone number
+            $table->string('phone'); // Contact's phone number
             $table->timestamps();
+
+
         });
     }
 
