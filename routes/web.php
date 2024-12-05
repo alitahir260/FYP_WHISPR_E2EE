@@ -24,7 +24,7 @@ Route::middleware('auth','check.pin', 'verified')->group(function () {
     Route::get('/dashboard', [ProfileController::class, 'dashboard'])->name('dashboard');
     Route::post('/add-contact', [ContactController::class, 'addContact'])->name('add-contact');
     Route::post('/add-contact2', [ContactController::class, 'store'])->name('add.contact2');
-
+    Route::get('/test2', [ContactController::class, 'profile_view'])->name('profile_view');
 
 });
 

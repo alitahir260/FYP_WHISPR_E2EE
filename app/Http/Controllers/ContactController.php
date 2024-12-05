@@ -107,4 +107,10 @@ class ContactController extends Controller
 }
 
 
+    public function profile_view()
+    {
+        return view('profile-page');
+    }
+
+
 }
