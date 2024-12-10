@@ -35,3 +35,6 @@ require __DIR__.'/auth.php';
 Route::get('/test', function () {
     return view('layouts.login');
 });
+Route::get('/test4', function () {
+    return view('layouts.login');
+});
