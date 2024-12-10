@@ -122,4 +122,9 @@ class ProfileController extends Controller
 
         return view('auth.enter-otp');
     }
+
+    public function show()
+    {
+        return view('profile.profile-settings');
+    }
 }

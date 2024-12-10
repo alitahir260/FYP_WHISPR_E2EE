@@ -1,101 +1,133 @@
-@extends('layouts.master-without-nav')
-@section('title')
-    @lang('translation.signin')
-@endsection
-@section('content')
-<div class="auth-page-wrapper pt-5">
-    <!-- auth page bg -->
-    <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
-        <div class="bg-overlay"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Input/Output Table</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
 
-        <div class="shape">
-            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1440 120">
-                <path d="M 0,36 C 144,53.6 432,123.2 720,124 C 1008,124.8 1296,56.8 1440,40L1440 140L0 140z"></path>
-            </svg>
-        </div>
-    </div>
+        /* Table Styling */
+        .hci-table {
+            width: 90%;
+            margin: 2rem auto;
+            border-collapse: collapse;
+            text-align: left;
+            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+        }
 
-    <!-- auth page content -->
-    <div class="auth-page-content">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="text-center mt-sm-5 mb-4 text-white-50">
-                        <div>
-                            <a href="index" class="d-inline-block auth-logo">
-                                <img src="{{ URL::asset('build/images/whispr-logo.jpg')}}" alt="" height="100">
-                            </a>
-                        </div>
-                        <p class="mt-3 fs-15 fw-medium">Fully End-To-End Encrypted  </p>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
+        .hci-table th,
+        .hci-table td {
+            border: 1px solid #ddd;
+            padding: 1rem;
+        }
 
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6 col-xl-5">
-                    <div class="card mt-4">
+        .hci-table thead {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
 
-                        <div class="card-body p-4">
-                            <div class="text-center mt-2">
-                                <h5 class="text-primary">Please Enter your PIN</h5>
-                                <p class="text-muted">Enter your 6-digit PIN to continue.</p>
-                            </div>
-                            <div class="p-2 mt-4">
-                                <form action="{{ route('validate_pin') }}" method="POST">
-                                    @csrf
-                                    <!-- PIN Input -->
-                                    <div class="mb-3">
-                                        <label for="password" class="form-label">PIN <span class="text-danger">*</span></label>
-                                        <div class="position-relative auth-pass-inputgroup mb-3">
-                                            <input type="password" class="form-control pe-5 password-input @error('password') is-invalid @enderror" name="password" placeholder="Enter your 6-digit PIN" id="password" required maxlength="6" pattern="[0-9]{6}" title="PIN must be 6 digits long.">
-                                            <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
-                                            @error('password')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-                                    </div>
+        .hci-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
 
-                                    <!-- Submit Button -->
-                                    <div class="mt-4">
-                                        <button class="btn btn-success w-100" type="submit">Submit PIN</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        <!-- end card body -->
-                    </div>
-                    <!-- end card -->
+        .hci-table tbody tr:hover {
+            background-color: #f1f1f1;
+            transition: background 0.2s ease;
+        }
 
-                    <div class="mt-4 text-center">
-                        <p class="mb-0">Forgot your PIN? <a href="{{ route('password.request') }}" class="fw-semibold text-primary text-decoration-underline"> Reset it </a> </p>
-                    </div>
+        .hci-table th {
+            font-size: 1.1rem;
+        }
 
-                </div>
-            </div>
-            <!-- end row -->
-        </div>
-        <!-- end container -->
-    </div>
-    <!-- end auth page content -->
+        .hci-table td {
+            font-size: 0.95rem;
+        }
 
-    <!-- footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <!-- Optional Footer -->
-                </div>
-            </div>
-        </div>
-    </footer>
-    <!-- end Footer -->
-</div>
-@endsection
-@section('script')
-<script src="{{ URL::asset('build/libs/particles.js/particles.js') }}"></script>
-<script src="{{ URL::asset('build/js/pages/particles.app.js') }}"></script>
-<script src="{{ URL::asset('build/js/pages/password-addon.init.js') }}"></script>
-@endsection
+        /* Responsive Styling */
+        @media screen and (max-width: 768px) {
+            .hci-table {
+                width: 100%;
+                font-size: 0.9rem;
+            }
+
+            .hci-table th,
+            .hci-table td {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <table class="hci-table">
+        <thead>
+            <tr>
+                <th>Screen</th>
+                <th>Input</th>
+                <th>Output</th>
+                <th>HCI Norms Followed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Login Screen</strong></td>
+                <td>Phone No, and PIN.</td>
+                <td>Success or failure message based on login credentials.</td>
+                <td>
+                    - Simple form with clear labels.<br>
+                    - Password field hides text.<br>
+                    - User-friendly error messages.
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Registration Screen</strong></td>
+                <td> Phone Number, OTP verification, and PIN setup.</td>
+                <td>Account creation confirmation or validation errors.</td>
+                <td>
+                    - Step-by-step process.<br>
+                    - validation feedback for inputs.<br>
+                    - Clear OTP input field.
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Chat Interface</strong></td>
+                <td>Text message, attachments, chat room codes, and recipient.</td>
+                <td>Sent/received encrypted messages, delivery status, and user activity.</td>
+                <td>
+                    - Real-time updates.<br>
+                    - Clean chat layout with timestamps.<br>
+
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Anonymous Chat Screen</strong></td>
+                <td>Anonymous chat room code.</td>
+                <td>Access confirmation and real-time chat messages.</td>
+                <td>
+                    - Prompt for entering room codes.<br>
+                    - Minimalistic UI to focus on chats.
+                </td>
+            </tr>
+
+
+            </tr>
+            <tr>
+                <td><strong>Logout Screen</strong></td>
+                <td>User action to log out.</td>
+                <td>Logout confirmation and redirection to login screen.</td>
+                <td>
+                    
+                    - Smooth redirection.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
