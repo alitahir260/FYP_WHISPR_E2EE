@@ -38,3 +38,6 @@ Route::get('/test', function () {
 Route::get('/test4', function () {
     return view('layouts.login');
 });
+Route::get('/testu', function () {
+    return view('layouts.login');
+});
