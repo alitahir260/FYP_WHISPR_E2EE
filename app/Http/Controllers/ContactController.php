@@ -19,34 +19,35 @@ class ContactController extends Controller
         // Check if the phone number exists in the users table
         $user = User::where('phone', $request->phone)->first();
 
-        if ($user) {
-            return response()->json(['exists' => true, 'message' => 'Phone number exists.']);
-        } else {
-            return response()->json(['exists' => false, 'message' => 'Phone number does not exist.']);
+        // if ($user) {
+        //     return response()->json(['exists' => true, 'message' => 'Phone number exists.']);
+        // } else {
+        //     return response()->json(['exists' => false, 'message' => 'Phone number does not exist.']);
+        // }
+        $request->validate([
+            'phone' => 'required|numeric|exists:users,phone',
+        ]);
+
+        $contactUser = User::where('phone', $request->phone)->first();
+
+        if (!$contactUser) {
+            return response()->json(['success' => false, 'message' => 'User with this phone number does not exist.']);
         }
-    //     $request->validate([
-    //         'phone' => 'required|numeric|exists:users,phone',
-    //     ]);
 
-    //     $contactUser = User::where('phone', $request->phone)->first();
+        $user = auth()->user();
 
-    //     if (!$contactUser) {
-    //         return response()->json(['success' => false, 'message' => 'User with this phone number does not exist.']);
-    //     }
+        if ($user->contacts()->where('phone', $request->phone)->exists()) {
+            return response()->json(['success' => false, 'message' => 'This contact is already in your list.']);
+        }
 
-    //     $user = auth()->user();
+        Contact::create([
+            'user_id' => $user->id,
+            'contact_user_id' => $contactUser->id,
+            'name' => $contactUser->name,
+            'phone' => $contactUser->phone,
+        ]);
 
-    //     if ($user->contacts()->where('phone', $request->phone)->exists()) {
-    //         return response()->json(['success' => false, 'message' => 'This contact is already in your list.']);
-    //     }
-
-    //     Contact::create([
-    //         'user_id' => $user->id,
-    //         'name' => $contactUser->name,
-    //         'phone' => $contactUser->phone,
-    //     ]);
-
-    //     return response()->json(['success' => true, 'message' => 'Contact added successfully.']);
+        return response()->json(['success' => true, 'message' => 'Contact added successfully.']);
     }
 
 

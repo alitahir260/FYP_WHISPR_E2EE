@@ -12,15 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('messages', function (Blueprint $table) {
-            $table->id(); // Primary key
-            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade'); // Foreign key to users table
-            $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade'); // Foreign key to users table
-            $table->text('content'); // Message content
-            $table->boolean('is_encrypted')->default(true); // Encryption status
-            $table->boolean('is_read')->default(false); // Read status
-            $table->integer('message_timer')->nullable(); // Optional timer for messages
-            $table->timestamps(); // Created and updated timestamps
+            $table->id();
+            $table->unsignedBigInteger('sender_id');
+            $table->unsignedBigInteger('receiver_id');
+            $table->text('message');
+            $table->boolean('is_read')->default(false);
+            $table->timestamps();
+
+            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
         });
+
     }
 
     /**

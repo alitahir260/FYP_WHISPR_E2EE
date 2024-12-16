@@ -624,12 +624,29 @@
 
                         </ul> --}}
 
-                        <ul class="list-unstyled chat-list chat-user-list" id="">
+                        {{-- <ul class="list-unstyled chat-list chat-user-list" id="">
                             @foreach ($contacts as $contact)
                                 <li>
                                     <a href="#" class="d-flex align-items-center justify-content-between py-2 px-3">
                                         <div class="d-flex align-items-center">
                                             <h5 class="text-truncate fs-14 mb-0">{{ $contact->contactUser->name ?? 'No Name' }}</h5>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-soft-primary rounded-pill">0</span> <!-- Placeholder for message count -->
+                                        </div>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul> --}}
+
+
+
+                        <ul class="list-unstyled chat-list chat-user-list" id="">
+                            @foreach ($users as $user)
+                                <li>
+                                    <a href="#" class="d-flex align-items-center justify-content-between py-2 px-3">
+                                        <div class="d-flex align-items-center">
+                                            <h5 class="text-truncate fs-14 mb-0">{{ $user->name ?? 'No Name' }}</h5>
                                         </div>
                                         <div>
                                             <span class="badge bg-soft-primary rounded-pill">0</span> <!-- Placeholder for message count -->

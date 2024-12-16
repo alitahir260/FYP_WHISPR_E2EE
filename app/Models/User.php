@@ -16,7 +16,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = ['name', 'phone', 'password'];
+    protected $fillable = ['name', 'phone', 'password','status', 'profile_picture'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -50,6 +50,17 @@ class User extends Authenticatable
         public function addedByUsers()
         {
              return $this->hasMany(Contact::class, 'contact_user_id');
+        }
+
+
+        public function sentMessages()
+        {
+            return $this->hasMany(Message::class, 'sender_id');
+        }
+
+        public function receivedMessages()
+        {
+            return $this->hasMany(Message::class, 'receiver_id');
         }
 
 }
