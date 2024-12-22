@@ -36,7 +36,7 @@ class ProfileController extends Controller
                         ->where('sender_id', $userId);
                 })->where('id', '!=', $userId) // Exclude the logged-in user
                 ->distinct()
-                ->get(['id', 'name','phone']);
+                ->get(['id', 'name','phone','status']);
 
 
             // dd($users->toArray());
@@ -229,4 +229,23 @@ class ProfileController extends Controller
 
         return redirect()->back()->with('success', 'Profile picture updated successfully.');
     }
+
+
+
+
+    public function lockScreen(Request $request)
+    {
+        // Forget the session key that validates the PIN
+        $request->session()->forget('pin_validated_at');
+
+        // Redirect to the PIN validation route
+        return redirect()->route('profile.validate.pin')->with('info', 'Your session has been locked. Please enter your PIN to unlock.');
+    }
+
+
+
+
+
+
+
 }

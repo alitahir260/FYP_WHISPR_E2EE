@@ -10,13 +10,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route::get('/dashboard', function () {
 
-//     $user = Auth::user();
-//     dd($user);
-//     // Pass user data to the view
-//     return view('chat-panel', compact('user'));
-// })->middleware(['auth', 'verified','check.pin'])->name('dashboard');
 
 Route::middleware('auth','check.pin', 'verified')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -38,7 +32,7 @@ Route::middleware('auth','check.pin', 'verified')->group(function () {
     Route::get('/messages/{contactUserId}', [MessageController::class, 'getUserMessages']);
     Route::get('/messages/{userId}', [MessageController::class, 'getUserMessages']);
 
-    
+
     Route::post('/messages/send', [MessageController::class, 'sendMessage'])->name('messages.send');
 
 

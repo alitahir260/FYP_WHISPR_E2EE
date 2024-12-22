@@ -24,7 +24,7 @@ class CheckPinValidated
 
     // Check if the last ping was more than 30 seconds ago (user is inactive)
     $pinValidatedAt = Carbon::parse($request->session()->get('pin_validated_at'));
-    if ($pinValidatedAt->diffInDays(now()) > 30) {
+    if ($pinValidatedAt->diffInMinutes(now()) > 30) {
         // Invalidate PIN if user has been inactive for more than 30 seconds
         $request->session()->forget('pin_validated_at');
         return redirect()->route('profile.validate.pin');

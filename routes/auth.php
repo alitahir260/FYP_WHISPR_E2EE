@@ -72,7 +72,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-
+                Route::get('/lock-screen', [ProfileController::class, 'lockScreen'])->name('profile.lock.screen');
 
 
 
