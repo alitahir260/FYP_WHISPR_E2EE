@@ -598,7 +598,7 @@
                         <div class="flex-grow-1">
                             <h4 class="mb-0 fs-11 text-muted text-uppercase">Direct Messages</h4>
                         </div>
-                        <div class="flex-shrink-0">
+                        {{-- <div class="flex-shrink-0">
                             <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom" title="New Message">
 
                                 <!-- Button trigger modal -->
@@ -615,7 +615,7 @@
                                     </form>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
 
                     <div class="chat-message-list">
@@ -643,17 +643,19 @@
 
                         <ul class="list-unstyled chat-list chat-user-list" id="">
                             @foreach ($users as $user)
-                                <li>
-                                    <a href="#" class="d-flex align-items-center justify-content-between py-2 px-3">
-                                        <div class="d-flex align-items-center">
-                                            <h5 class="text-truncate fs-14 mb-0">{{ $user->name ?? 'No Name' }}</h5>
-                                        </div>
-                                        <div>
-                                            <span class="badge bg-soft-primary rounded-pill">0</span> <!-- Placeholder for message count -->
-                                        </div>
-                                    </a>
-                                </li>
-                            @endforeach
+                            <li>
+                                <a href="#"
+                                   class="d-flex align-items-center justify-content-between py-2 px-3"
+                                   onclick="loadMessages({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->phone) }}')">
+                                    <div class="d-flex align-items-center">
+                                        <h5 class="text-truncate fs-14 mb-0">{{ $user->name ?? 'No Name' }}</h5>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-soft-primary rounded-pill">0</span> <!-- Placeholder for message count -->
+                                    </div>
+                                </a>
+                            </li>
+                        @endforeach
                         </ul>
 
                     </div>
@@ -681,19 +683,21 @@
             </div>
             <div class="tab-pane" id="contacts" role="tabpanel">
                 <div class="chat-room-list pt-3" data-simplebar>
-                    <ul class="list-unstyled chat-list chat-user-list" id="">
+                    <ul class="list-unstyled chat-list chat-user-list" id="contact-list">
                         @foreach ($contacts as $contact)
-                            <li>
-                                <a href="#" class="d-flex align-items-center justify-content-between py-2 px-3">
-                                    <div class="d-flex align-items-center">
-                                        <h5 class="text-truncate fs-14 mb-0">{{ $contact->contactUser->name ?? 'No Name' }}</h5>
-                                    </div>
-                                    <div>
-                                        <span class="badge bg-soft-primary rounded-pill">0</span> <!-- Placeholder for message count -->
-                                    </div>
-                                </a>
-                            </li>
-                        @endforeach
+                        <li>
+                            <a href="#"
+                               class="d-flex align-items-center justify-content-between py-2 px-3"
+                               onclick="loadMessages({{ $contact->contact_user_id }})">
+                                <div class="d-flex align-items-center">
+                                    <h5 class="text-truncate fs-14 mb-0">{{ $contact->name ?? 'No Name' }}</h5>
+                                </div>
+                                <div>
+                                    <span class="badge bg-soft-primary rounded-pill">0</span> <!-- Placeholder for message count -->
+                                </div>
+                            </a>
+                        </li>
+                    @endforeach
                     </ul>
                 </div>
             </div>
@@ -726,7 +730,11 @@
                                                     <span class="user-status"></span>
                                                 </div>
                                                 <div class="flex-grow-1 overflow-hidden">
-                                                    <h5 class="text-truncate mb-0 fs-16"><a class="text-reset username" data-bs-toggle="offcanvas" href="#userProfileCanvasExample" aria-controls="userProfileCanvasExample">Lisa Parker</a></h5>
+                                                    <h5 class="text-truncate mb-0 fs-16">
+                                                        <a class="text-reset username" id="receiver-name" data-bs-toggle="offcanvas" href="#userProfileCanvasExample" aria-controls="userProfileCanvasExample">
+
+                                                        </a>
+                                                        </h5>
                                                     <p class="text-truncate text-muted fs-14 mb-0 userStatus"><small>Online</small></p>
                                                 </div>
                                             </div>
@@ -776,16 +784,15 @@
 
                         </div>
                         <!-- end chat user head -->
-                        <div class="chat-conversation p-3 p-lg-4 " id="chat-conversation" data-simplebar>
-                            <div id="elmLoader">
+                        <div class="chat-conversation p-3 p-lg-4" id="chat-conversation" data-simplebar>
+                            <div id="elmLoader" style="display: none;">
                                 <div class="spinner-border text-primary avatar-sm" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
                             </div>
                             <ul class="list-unstyled chat-conversation-list" id="users-conversation">
-
+                                <!-- Messages will be loaded here -->
                             </ul>
-                            <!-- end chat-conversation-list -->
                         </div>
                         <div class="alert alert-warning alert-dismissible copyclipboard-alert px-4 fade show " id="copyClipBoard" role="alert">
                             Message copied
@@ -887,7 +894,7 @@
                                     <div class="chat-input-feedback">
                                         Please Enter a Message
                                     </div>
-                                    <input type="text" class="form-control chat-input bg-light border-light" id="chat-input" placeholder="Type your message..." autocomplete="off">
+                                    <input type="text" class="form-control chat-input bg-light border-light" id="chat-input" placeholder="Type your Me..." autocomplete="off">
                                 </div>
                                 <div class="col-auto">
                                     <div class="chat-input-links ms-2">
@@ -1012,166 +1019,18 @@
         <div class="border-top border-top-dashed p-3">
             <h5 class="fs-15 mb-3">Personal Details</h5>
             <div class="mb-3">
-                <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Number</p>
-                <h6>+(256) 2451 8974</h6>
+                <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Name</p>
+                <h6 id="receiver-name-link"></h6> <!-- Add an ID for the name -->
             </div>
             <div class="mb-3">
-                <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Email</p>
-                <h6>lisaparker@gmail.com</h6>
+                <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Number</p>
+                <h6 id="receiver-phone"></h6> <!-- Add an ID for the phone number -->
             </div>
-            <div>
-                <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Location</p>
-                <h6 class="mb-0">California, USA</h6>
-            </div>
+
+
         </div>
 
-        <div class="border-top border-top-dashed p-3">
-            <h5 class="fs-15 mb-3">Attached Files</h5>
-
-            <div class="vstack gap-2">
-                <div class="border rounded border-dashed p-2">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="avatar-xs">
-                                <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                    <i class="ri-folder-zip-line"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">App
-                                    pages.zip</a></h5>
-                            <div class="text-muted">2.2MB</div>
-                        </div>
-                        <div class="flex-shrink-0 ms-2">
-                            <div class="d-flex gap-1">
-                                <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                <div class="dropdown">
-                                    <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ri-more-fill"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                Bookmark</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border rounded border-dashed p-2">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="avatar-xs">
-                                <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                    <i class="ri-file-ppt-2-line"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Velzon
-                                    admin.ppt</a></h5>
-                            <div class="text-muted">2.4MB</div>
-                        </div>
-                        <div class="flex-shrink-0 ms-2">
-                            <div class="d-flex gap-1">
-                                <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                <div class="dropdown">
-                                    <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ri-more-fill"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                Bookmark</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border rounded border-dashed p-2">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="avatar-xs">
-                                <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                    <i class="ri-folder-zip-line"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Images.zip</a></h5>
-                            <div class="text-muted">1.2MB</div>
-                        </div>
-                        <div class="flex-shrink-0 ms-2">
-                            <div class="d-flex gap-1">
-                                <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                <div class="dropdown">
-                                    <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ri-more-fill"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                Bookmark</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border rounded border-dashed p-2">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="avatar-xs">
-                                <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                    <i class="ri-image-2-line"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">bg-pattern.png</a></h5>
-                            <div class="text-muted">1.1MB</div>
-                        </div>
-                        <div class="flex-shrink-0 ms-2">
-                            <div class="d-flex gap-1">
-                                <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                <div class="dropdown">
-                                    <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ri-more-fill"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                Bookmark</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-center mt-2">
-                    <button type="button" class="btn btn-danger">Load more <i class="ri-arrow-right-fill align-bottom ms-1"></i></button>
-                </div>
-            </div>
-        </div>
+        
     </div>
     <!--end offcanvas-body-->
 </div>
@@ -2072,6 +1931,9 @@
     document.onscroll = resetTimer;
 
 
+
+
+    //CONTACT SUBMIT FUNCTIO
     async function submitContact() {
     const phone = document.getElementById('phone').value;
 
@@ -2114,11 +1976,136 @@
 
 
 
+//LOADING MESSAGES THROUGH AJAX CALL
+async function loadMessages(contactUserId, contactUserName, contactUserPhone) {
+    const conversationList = document.getElementById('users-conversation');
+    const loader = document.getElementById('elmLoader');
+    const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
+    const receiverPhoneElement = document.getElementById('receiver-phone'); // Add an element for the phone if necessary
+
+    const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
+
+// Update the receiver's name dynamically
+    receiverNameElement.textContent = contactUserName; // Set the receiver's name here
+    receiverPhoneElement.textContent = contactUserPhone; //users phone
+    receiverNameLink.textContent = contactUserName; // Update the header link
+
+    // Show loader and clear previous messages
+    loader.style.display = 'block';
+    conversationList.innerHTML = '';
+
+    try {
+        // Make AJAX call to get messages
+        const response = await fetch(`/messages/${contactUserId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        if (!response.ok) {
+            toastr.error('Failed to load messages.');
+            return;
+        }
+
+        const data = await response.json();
+
+        // Hide loader
+        loader.style.display = 'none';
+
+        if (data.messages.length === 0) {
+            conversationList.innerHTML = '<li class="text-center text-muted">No messages found</li>';
+            return;
+        }
+
+        // Append messages to the conversation list
+        data.messages.forEach(message => {
+            const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
+            const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' : 'bg-light';
+            const messageHTML = `
+                <li class="d-flex ${alignment} my-2">
+                    <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
+                        <p class="mb-0">${message.message}</p>
+                        <small class="text-muted">${message.created_at}</small>
+                    </div>
+                </li>
+            `;
+            conversationList.insertAdjacentHTML('beforeend', messageHTML);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        toastr.error('An error occurred while loading messages.');
+    } finally {
+        loader.style.display = 'none';
+    }
+
+}
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const chatForm = document.getElementById('chatinput-form');
+    const chatInput = document.getElementById('chat-input');
+
+    // Mock: Replace with actual logic to get receiver's ID dynamically
+    const receiverId = document.getElementById('receiver-id').value; // Assume there's a hidden input field
+
+    chatForm.addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default form submission behavior
+
+        const message = chatInput.value.trim();
+        if (!message) {
+            alert('Please enter a message.');
+            return;
+        }
+
+        // AJAX call to send the message
+        fetch('/messages/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({
+                receiver_id: receiverId, // Receiver's ID
+                message: message,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    chatInput.value = ''; // Clear input field
+                    // Append the new message to the chat
+                    const chatBox = document.getElementById('chat-box'); // Assume you have a chat box
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('chat-message', 'sent');
+                    messageElement.textContent = message;
+                    chatBox.appendChild(messageElement);
+                    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+                } else {
+                    alert('Failed to send the message.');
+                }
+            })
+            .catch((error) => console.error('Error:', error));
+    });
+});
+
+
+
+
+
+
+
 
 function toggleDropdown() {
         const dropdown = document.getElementById('dropdownForm');
         dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
     }
+
 
 
 

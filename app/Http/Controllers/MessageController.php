@@ -10,19 +10,21 @@ class MessageController extends Controller
 {
     public function sendMessage(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string',
+            'message' => 'required|string|max:1000',
         ]);
 
         $message = Message::create([
-            'sender_id' => auth()->id(),
-            'receiver_id' => $request->receiver_id,
-            'message' => $request->message,
+            'sender_id' => Auth::id(), // Authenticated user ID
+            'receiver_id' => $validated['receiver_id'],
+            'message' => $validated['message'],
+            'is_read' => false, // Default value for `is_read`
         ]);
 
-        return response()->json(['message' => 'Message sent successfully.', 'data' => $message], 201);
+        return response()->json(['success' => true, 'message' => $message]);
     }
+
 
     public function getMessages($userId)
     {
@@ -44,4 +46,35 @@ class MessageController extends Controller
 
         return response()->json(['message' => 'Message marked as read.'], 200);
     }
+
+
+
+
+    public function getUserMessages($contactUserId)
+{
+    $currentUserId = auth()->id();
+
+    // Fetch messages between current user and selected contact
+    $messages = Message::where(function ($query) use ($currentUserId, $contactUserId) {
+            $query->where('sender_id', $currentUserId)
+                  ->where('receiver_id', $contactUserId);
+        })
+        ->orWhere(function ($query) use ($currentUserId, $contactUserId) {
+            $query->where('sender_id', $contactUserId)
+                  ->where('receiver_id', $currentUserId);
+        })
+        ->orderBy('created_at', 'asc')
+        ->get(['sender_id', 'receiver_id', 'message', 'created_at']);
+
+
+
+    return response()->json([
+        'messages' => $messages,
+        'current_user_id' => $currentUserId
+    ]);
+}
+    
+
+
+
 }

@@ -22,7 +22,7 @@ class ProfileController extends Controller
         public function dashboard()
         {
             $user = Auth::user();
-            $userId = 1;
+            $userId = $user->id;
 
 
                 // Fetch users the authenticated user has chatted with
@@ -36,11 +36,12 @@ class ProfileController extends Controller
                         ->where('sender_id', $userId);
                 })->where('id', '!=', $userId) // Exclude the logged-in user
                 ->distinct()
-                ->get(['id', 'name']);
+                ->get(['id', 'name','phone']);
 
 
-            // dd($user->toArray());
+            // dd($users->toArray());
             $contacts = $user->contacts()->with('contactUser')->get();
+            // dd($contacts->toarray());
                 // Pass user data to the view
                 return view('chat-panel', compact('user','contacts','users'));
         }
