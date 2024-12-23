@@ -92,7 +92,10 @@
         </div>
     </footer>
     <!-- end Footer -->
+
 </div>
+
+
 
 @if (session('success'))
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
@@ -108,6 +111,19 @@
 @endif
 @endsection
 
+@if (session('toast'))
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div class="toast align-items-center text-bg-info border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('toast') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+@endif
+
 @section('script')
 <script src="{{ URL::asset('build/libs/particles.js/particles.js') }}"></script>
 <script src="{{ URL::asset('build/js/pages/particles.app.js') }}"></script>
@@ -121,6 +137,14 @@
         })
         toastList.forEach(toast => toast.show()) // Show all toasts automatically
     });
+
+
+
+
+
+
+
+
 </script>
 @endsection
 

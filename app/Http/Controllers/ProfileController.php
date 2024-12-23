@@ -239,7 +239,7 @@ class ProfileController extends Controller
         $request->session()->forget('pin_validated_at');
 
         // Redirect to the PIN validation route
-        return redirect()->route('profile.validate.pin')->with('info', 'Your session has been locked. Please enter your PIN to unlock.');
+        return redirect()->route('profile.validate.pin')->with('toast', 'Your session has been locked. Please re-enter your PIN.');
     }
 
 
