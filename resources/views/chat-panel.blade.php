@@ -688,6 +688,7 @@
                                         Please Enter a Message
                                     </div>
                                     <input type="text" class="form-control chat-input bg-light border-light" id="chat-input" placeholder="Type your Me..." autocomplete="off">
+                                    <input type="text" class="receiver_id" hidden id="receiver_id">
                                 </div>
                                 <div class="col-auto">
                                     <div class="chat-input-links ms-2">
@@ -1630,7 +1631,6 @@
     </div>
 </div>
 
-
 {{-- //toast noti BOOTSTRAP --}}
 <div class="toast-container position-fixed top-0 end-0 p-3">
     @if (session('success'))
@@ -1657,7 +1657,7 @@
 </div>
 
     <!-- JAVASCRIPT -->
-    <script src="http://127.0.0.1:8000/build/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="http://127.0.0.1:8000/build/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="http://127.0.0.1:8000/build/libs/simplebar/simplebar.min.js"></script>
 <script src="http://127.0.0.1:8000/build/libs/node-waves/waves.min.js"></script>
 <script src="http://127.0.0.1:8000/build/libs/feather-icons/feather.min.js"></script>
@@ -1760,6 +1760,7 @@ async function loadMessages(contactUserId, contactUserName, contactUserPhone, co
     const receiverPhoneElement = document.getElementById('receiver-phone'); // Add an element for the phone if necessary
     const receiverNameContact = document.getElementById('receiver-name-contact'); // New element for contact header
     const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
+    const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
 
 
     const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
@@ -1771,6 +1772,7 @@ async function loadMessages(contactUserId, contactUserName, contactUserPhone, co
     receiverNameLink.textContent = contactUserName; // Update the header link
     receiverNameContact.textContent = contactUserName; // Update the contact header name
     receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
+    receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
 
     // Show loader and clear previous messages
     loader.style.display = 'block';

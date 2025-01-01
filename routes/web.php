@@ -24,7 +24,7 @@ Route::middleware('auth','check.pin', 'verified')->group(function () {
 
     // Route::post('/add-contact2', [ContactController::class, 'store'])->name('add.contact2');
     Route::get('/test2', [ContactController::class, 'profile_view'])->name('profile_view');
-    Route::get('/profile/settings', [ProfileController::class, 'show'])->name('profile.settings');
+    Route::get('/profile/settings', [ProfileController::class, 'sh  ow'])->name('profile.settings');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/update-avatar', [ProfileController::class, 'updateAvatar'])->name('profile.update.avatar');
 
@@ -44,7 +44,7 @@ require __DIR__.'/auth.php';
 
 
 Route::get('/test', function () {
-    return view('layouts.login');
+    return view('auth.login');
 });
 Route::get('/test4', function () {
     return view('layouts.login');

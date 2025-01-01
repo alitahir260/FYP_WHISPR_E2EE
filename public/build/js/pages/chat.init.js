@@ -480,6 +480,7 @@ File: Chat init js
     var chatForm = document.querySelector("#chatinput-form");
     var chatInput = document.querySelector("#chat-input");
     var chatInputfeedback = document.querySelector(".chat-input-feedback");
+    const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
 
     function currentTime() {
         var ampm = new Date().getHours() >= 12 ? "pm" : "am";
@@ -510,13 +511,57 @@ File: Chat init js
             var chatReplyId = currentChatId;
 
             var chatInputValue = chatInput.value
+            console.log(2);
+
 
             if (chatInputValue.length === 0) {
                 chatInputfeedback.classList.add("show");
                 setTimeout(function () {
                     chatInputfeedback.classList.remove("show");
                 }, 2000);
+
             } else {
+
+                const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
+                const receiverId = receiverIdInput.value; // Get the receiver's ID dynamically
+
+
+                const message = chatInputValue;
+                if (!message) {
+                    alert('Please enter a message.');
+                    return;
+                }
+
+
+                // AJAX call to send the message
+                fetch('/messages/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        receiver_id: receiverId, // Receiver's ID
+                        message: message,
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.success) {
+                            chatInput.value = ''; // Clear input field
+                            // Append the new message to the chat
+                            const chatBox = document.getElementById('chat-box'); // Assume you have a chat box
+                            const messageElement = document.createElement('div');
+                            messageElement.classList.add('chat-message', 'sent');
+                            messageElement.textContent = message;
+                            chatBox.appendChild(messageElement);
+                            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+                        } else {
+                            alert('Failed to send the message.');
+                        }
+                    })
+                    .catch((error) => console.error('Error:', error));
+
                 if (isreplyMessage == true) {
                     getReplyChatList(chatReplyId, chatInputValue);
                     isreplyMessage = false;
@@ -636,7 +681,7 @@ File: Chat init js
         });
     }
 
-    //Delete Message 
+    //Delete Message
     function deleteMessage() {
         var deleteItems = itemList.querySelectorAll(".delete-item");
         deleteItems.forEach(function (item) {
@@ -648,7 +693,7 @@ File: Chat init js
         });
     }
 
-    //Delete Image 
+    //Delete Image
     function deleteImage() {
         var deleteImage = itemList.querySelectorAll(".chat-conversation-list .chat-list");
         deleteImage.forEach(function (item) {
@@ -798,7 +843,7 @@ File: Chat init js
             });
         });
 
-        //reply Message model    
+        //reply Message model
         newChatList.querySelectorAll(".reply-message").forEach(function (subitem) {
             subitem.addEventListener("click", function () {
                 var replyToggleOpenNew = document.querySelector(".replyCard");

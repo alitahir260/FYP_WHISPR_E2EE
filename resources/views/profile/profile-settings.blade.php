@@ -32,7 +32,7 @@
                             @csrf
                             <div class="profile-user position-relative mx-auto mb-4">
                                 <img src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) : asset('build/images/users/avatar-1.jpg') }}"
-     class="rounded-circle avatar-xl img-thumbnail" alt="Profile Picture" id="profile-img-preview">
+                                  class="rounded-circle avatar-xl img-thumbnail" alt="Profile Picture" id="profile-img-preview">
 
                                 <label for="profile-img-file-input" class="avatar-xs profile-photo-edit">
                                     <span class="avatar-title bg-light text-body rounded-circle p-2">
