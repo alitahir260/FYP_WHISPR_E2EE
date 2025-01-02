@@ -230,7 +230,7 @@ File: Chat init js
                     isreplyMessage = false;
                     document.querySelector(".replyCard").classList.remove("show");
                 }
-                
+
                 if (item.querySelector(".align-items-center").querySelector(".avatar-xxs img")) {
                     var contactImg = item.querySelector(".align-items-center").querySelector(".avatar-xxs .rounded-circle").getAttribute("src");
                     document.querySelector(".user-own-img .avatar-xs").setAttribute("src", contactImg);

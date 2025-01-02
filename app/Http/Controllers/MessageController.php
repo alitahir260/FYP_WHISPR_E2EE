@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\MessageSent;
+use App\Events\MyEvent;
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
@@ -26,7 +27,7 @@ public function sendMessage(Request $request)
     ]);
 
     broadcast(new MessageSent($message))->toOthers();
-
+    event(new MyEvent('hello world'));
     return response()->json(['success' => true, 'message' => $message]);
 }
 
