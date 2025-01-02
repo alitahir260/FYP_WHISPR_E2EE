@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
@@ -9,22 +10,25 @@ use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
-    public function sendMessage(Request $request)
-    {
-        $validated = $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string|max:1000',
-        ]);
 
-        $message = Message::create([
-            'sender_id' => Auth::id(), // Authenticated user ID
-            'receiver_id' => $validated['receiver_id'],
-            'message' => $validated['message'],
-            'is_read' => false, // Default value for `is_read`
-        ]);
+public function sendMessage(Request $request)
+{
+    $validated = $request->validate([
+        'receiver_id' => 'required|exists:users,id',
+        'message' => 'required|string|max:1000',
+    ]);
 
-        return response()->json(['success' => true, 'message' => $message]);
-    }
+    $message = Message::create([
+        'sender_id' => Auth::id(),
+        'receiver_id' => $validated['receiver_id'],
+        'message' => $validated['message'],
+        'is_read' => false,
+    ]);
+
+    broadcast(new MessageSent($message))->toOthers();
+
+    return response()->json(['success' => true, 'message' => $message]);
+}
 
 
     public function getMessages($userId)
@@ -74,7 +78,7 @@ class MessageController extends Controller
         'current_user_id' => $currentUserId
     ]);
 }
-    
+
 
 
 
