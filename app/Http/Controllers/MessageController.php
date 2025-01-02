@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
@@ -16,11 +18,13 @@ class MessageController extends Controller
         ]);
 
         $message = Message::create([
-            'sender_id' => Auth::id(), // Authenticated user ID
+            'sender_id' => Auth::id(),
             'receiver_id' => $validated['receiver_id'],
             'message' => $validated['message'],
-            'is_read' => false, // Default value for `is_read`
+            'is_read' => false,
         ]);
+
+        broadcast(new MessageSent($message))->toOthers();
 
         return response()->json(['success' => true, 'message' => $message]);
     }
@@ -73,7 +77,7 @@ class MessageController extends Controller
         'current_user_id' => $currentUserId
     ]);
 }
-    
+
 
 
 
