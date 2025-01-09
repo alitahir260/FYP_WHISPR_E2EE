@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnonymousController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
@@ -24,7 +25,7 @@ Route::middleware('auth','check.pin', 'verified')->group(function () {
 
     // Route::post('/add-contact2', [ContactController::class, 'store'])->name('add.contact2');
     Route::get('/test2', [ContactController::class, 'profile_view'])->name('profile_view');
-    Route::get('/profile/settings', [ProfileController::class, 'sh  ow'])->name('profile.settings');
+    Route::get('/profile/settings', [ProfileController::class, 'show'])->name('profile.settings');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/update-avatar', [ProfileController::class, 'updateAvatar'])->name('profile.update.avatar');
 
@@ -38,7 +39,11 @@ Route::middleware('auth','check.pin', 'verified')->group(function () {
 
 
 
+
+
 });
+
+Route::get('/anonymous-chat', [AnonymousController::class, 'showCode'])->name('anonymous.code');
 
 require __DIR__.'/auth.php';
 
