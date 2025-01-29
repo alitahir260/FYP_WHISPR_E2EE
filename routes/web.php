@@ -4,6 +4,7 @@ use App\Http\Controllers\AnonymousController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
+use App\Models\AnonymousUser;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -36,14 +37,23 @@ Route::middleware('auth','check.pin', 'verified')->group(function () {
 
     Route::post('/messages/send', [MessageController::class, 'sendMessage'])->name('messages.send');
 
-
-
-
-
-
 });
 
-Route::get('/anonymous-chat', [AnonymousController::class, 'showCode'])->name('anonymous.code');
+Route::get('/anonymous-chat/code', [AnonymousController::class, 'showCode'])->name('anonymous.code');
+Route::post('/anonymous/messages/send', [AnonymousController::class, 'sendAnonymousMessage'])->name('anonymous.messages.send');
+Route::post('/anonymous-chat/connect', [AnonymousController::class, 'connect'])->name('anonymous.chat.connect');
+
+Route::get('/anonymous/chat/{chat_code}', function ($chat_code) {
+    $user = AnonymousUser::where('session_id', session()->getId())->first();
+
+    session()->put('chat_code', $chat_code);
+    // Retrieve the other user in the chat session
+    $user2 = AnonymousUser::where('code', $chat_code)->where('id', '!=', $user->id)->first();
+    $users = [$user2];
+    // return back();
+    return view('anonymous-chat-panel', compact('user', 'users'));
+})->name('anonymous.chat');
+
 
 require __DIR__.'/auth.php';
 

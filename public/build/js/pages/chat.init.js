@@ -6,6 +6,118 @@ Contact: Themesbrand@gmail.com
 File: Chat init js
 */
 
+
+// Pusher.logToConsole = true;
+const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
+const receiverId = receiverIdInput.value;
+var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+// pusher code to receive chats for the authenticated users
+Pusher.logToConsole = true;
+
+var pusher = new Pusher('9cf0f60100aceaf813ea', {
+    cluster: 'ap2'
+});
+
+
+var channel = pusher.subscribe('my-channel');
+channel.bind(`my-event`, function (data) {
+    const chatBox = document.getElementById('users-conversation');
+    const messageElement = document.createElement('li');
+
+    if (data.receiver_id == userId) {
+        messageElement.classList.add('chat-list', 'left');
+        messageElement.innerHTML = `<div class="conversation-list">
+                    <div class="chat-avatar">
+                        <img src="${data.sender_avatar}" alt="Sender Avatar">
+                    </div>
+                    <div class="user-chat-content">
+                        <div class="ctext-wrap">
+                            <div class="ctext-wrap-content" id="${data.message_id}">
+                                <p class="mb-0 ctext-content">${data.message}</p>
+                            </div>
+                            <div class="dropdown align-self-start message-box-drop">
+                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="ri-more-2-fill"></i>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                                    <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="conversation-name">
+                            <span class="d-none name">${data.sender_name}</span>
+                            <small class="text-muted time">${data.time}</small>
+                            <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                        </div>
+                    </div>
+                </div>`
+    }
+
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+// Pusher.logToConsole = true;
+
+// var pusher = new Pusher('9cf0f60100aceaf813ea', {
+//     cluster: 'ap2',
+//     authEndpoint: '/broadcasting/auth',
+//     auth: {
+//         headers: {
+//             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+//         }
+//     }
+// });
+
+// Get the chat code
+const chatCode = "{{ session('chat_code') }}";
+
+
+var anonymousChannelChat = pusher.subscribe(`anonymous-chat`);
+
+anonymousChannelChat.bind("anonymous-message-sent", function (data) {
+    if (data.receiver_id == userId) { // Only display if the user is the intended receiver
+        const chatBox = document.getElementById('users-conversation');
+        const messageElement = document.createElement('li');
+        messageElement.classList.add('chat-list', 'left');
+        messageElement.innerHTML = `
+            <div class="conversation-list">
+                <div class="chat-avatar">
+                    <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png" alt="Sender Avatar">
+                </div>
+                <div class="user-chat-content">
+                    <div class="ctext-wrap">
+                        <div class="ctext-wrap-content" id="">
+                            <p class="mb-0 ctext-content">${data.message}</p>
+                        </div>
+                        <div class="dropdown align-self-start message-box-drop">
+                            <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="ri-more-2-fill"></i>
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item reply-message" href="#">Reply</a>
+                                <a class="dropdown-item copy-message" href="#">Copy</a>
+                                <a class="dropdown-item delete-item" href="#">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="conversation-name">
+                        <small class="text-muted time">${data.time}</small>
+                        <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                    </div>
+                </div>
+            </div>`;
+
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+});
+
+
 (function () {
     var dummyUserImage = "build/images/users/user-dummy-img.jpg";
     var dummyMultiUserImage = "build/images/users/multi-user.jpg";
@@ -48,7 +160,7 @@ File: Chat init js
     //User current Id
     var currentChatId = "users-chat";
     var currentSelectedChat = "users";
-    var url="build/json/";
+    var url = "build/json/";
     var usersList = "";
     var userChatId = 1;
 
@@ -430,7 +542,7 @@ File: Chat init js
                     }
 
                     msgHTML +=
-                        '<div class="conversation-name"><span class="d-none name">'+user.name+'</span><small class="text-muted time">'+ isChat.datetime +
+                        '<div class="conversation-name"><span class="d-none name">' + user.name + '</span><small class="text-muted time">' + isChat.datetime +
                         '</small> <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span></div>';
                     msgHTML += "</div>\
                 </div>\
@@ -458,6 +570,165 @@ File: Chat init js
             selector: ".popup-img",
             title: false,
         });
+    }
+
+
+    //LOADING MESSAGES THROUGH AJAX CALL
+    loadAnonymousMessages = async function(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
+        const conversationList = document.getElementById('users-conversation');
+        const loader = document.getElementById('elmLoader');
+        const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
+        const receiverPhoneElement = document.getElementById(
+            'receiver-phone'); // Add an element for the phone if necessary
+        const receiverNameContact = document.getElementById(
+            'receiver-name-contact'); // New element for contact header
+        const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
+        const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
+
+
+        const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
+
+
+        // Update the receiver's name dynamically
+        receiverNameElement.textContent = contactUserName; // Set the receiver's name here
+        receiverPhoneElement.textContent = contactUserPhone; //users phone
+        receiverNameLink.textContent = contactUserName; // Update the header link
+        receiverNameContact.textContent = contactUserName; // Update the contact header name
+        receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
+        receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
+
+        // Show loader and clear previous messages
+        // loader.style.display = 'block';
+        conversationList.innerHTML = '';
+
+    }
+
+    const chatCode = document.querySelector('meta[name="chat-code"]').getAttribute('content'); // Get the chat code
+    var anonymousChatForm = document.querySelector("#anonymous-chatinput-form");
+
+    // anonymous chat form submit
+    if (anonymousChatForm) {
+        let subscribedChannels = new Set(); // To keep track of the subscribed channels
+        //add an item to the List, including to local storage
+        anonymousChatForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            var isreplyMessage = false;
+            var chatId = currentChatId;
+            var chatReplyId = currentChatId;
+
+            var chatInputValue = chatInput.value
+
+            if (chatInputValue.length === 0) {
+                chatInputfeedback.classList.add("show");
+                setTimeout(function () {
+                    chatInputfeedback.classList.remove("show");
+                }, 2000);
+
+            } else {
+
+                const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
+                const receiverId = receiverIdInput.value; // Get the receiver's ID dynamically
+                console.log(receiverId);
+
+
+                const message = chatInputValue;
+                if (!message) {
+                    alert('Please enter a message.');
+                    return;
+                }
+
+
+                // AJAX call to send the message
+                fetch('/anonymous/messages/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        code: chatCode, // Receiver's ID
+                        receiver_id: receiverId, // Receiver's ID
+                        message: message,
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.success) {
+                            chatInput.value = '';
+
+                            var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+                            if (userId !== receiverId) {
+                                console.log('userId:', userId);
+
+                                Echo.private(`chat.${receiverId}`)
+                                    .listen('MessageSent', (event) => {
+                                        console.log('Message received:', event.message);
+
+                                        // Get the chat box container where messages are displayed
+                                        const chatBox = document.getElementById('users-conversation');
+
+                                        // Create the new message element based on the sender
+                                        const messageElement = document.createElement('li');
+
+
+                                        if (event.receiver_id === userId) {
+
+                                            // Sent message (right side)
+                                            messageElement.classList.add('chat-list', 'right');
+                                            messageElement.innerHTML = `
+                                                <div class="conversation-list">
+                                                    <div class="user-chat-content">
+                                                        <div class="ctext-wrap">
+                                                            <div class="ctext-wrap-content" id="${event.message_id}">
+                                                                <p class="mb-0 ctext-content">${event.message}</p>
+                                                            </div>
+                                                            <div class="dropdown align-self-start message-box-drop">
+                                                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                    <i class="ri-more-2-fill"></i>
+                                                                </a>
+                                                                <div class="dropdown-menu">
+                                                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                                                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                                                                    <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                                                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                                                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="conversation-name">
+                                                            <span class="d-none name">You</span>
+                                                            <small class="text-muted time">${event.time}</small>
+                                                            <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }
+
+                                        chatBox.appendChild(messageElement);
+                                        chatBox.scrollTop = chatBox.scrollHeight;
+                                    });
+                            };
+
+                        } else {
+                            alert('Failed to send the message.');
+                        }
+                    })
+                    .catch((error) => console.error('Error:', error));
+
+                if (isreplyMessage == true) {
+                    getReplyChatList(chatReplyId, chatInputValue);
+                    isreplyMessage = false;
+                } else {
+                    getChatList(chatId, chatInputValue);
+                }
+                scrollToBottom(chatId || chatReplyId);
+            }
+            chatInput.value = "";
+
+            document.getElementById("close_toggle").click();
+        })
     }
 
     // // Scroll to Bottom
@@ -503,6 +774,7 @@ File: Chat init js
     var messageIds = 0;
 
     if (chatForm) {
+        let subscribedChannels = new Set(); // To keep track of the subscribed channels
         //add an item to the List, including to local storage
         chatForm.addEventListener("submit", function (e) {
             e.preventDefault();
@@ -511,8 +783,6 @@ File: Chat init js
             var chatReplyId = currentChatId;
 
             var chatInputValue = chatInput.value
-            console.log(2);
-
 
             if (chatInputValue.length === 0) {
                 chatInputfeedback.classList.add("show");
@@ -524,6 +794,7 @@ File: Chat init js
 
                 const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
                 const receiverId = receiverIdInput.value; // Get the receiver's ID dynamically
+                console.log(receiverId);
 
 
                 const message = chatInputValue;
@@ -548,14 +819,102 @@ File: Chat init js
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.success) {
-                            chatInput.value = ''; // Clear input field
-                            // Append the new message to the chat
-                            const chatBox = document.getElementById('chat-box'); // Assume you have a chat box
-                            const messageElement = document.createElement('div');
-                            messageElement.classList.add('chat-message', 'sent');
-                            messageElement.textContent = message;
-                            chatBox.appendChild(messageElement);
-                            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+                            chatInput.value = '';
+
+                            // if (!subscribedChannels.has(receiverId)) {
+
+                            var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+                            if (userId !== receiverId) {
+                                console.log('userId:', userId);
+
+                                Echo.private(`chat.${receiverId}`)
+                                    .listen('MessageSent', (event) => {
+                                        console.log('Message received:', event.message);
+
+                                        // Get the chat box container where messages are displayed
+                                        const chatBox = document.getElementById('users-conversation');
+
+                                        // Create the new message element based on the sender
+                                        const messageElement = document.createElement('li');
+
+                                        console.log('appending..');
+
+                                        if (event.receiver_id === userId) {
+
+                                            // Sent message (right side)
+                                            messageElement.classList.add('chat-list', 'right');
+                                            messageElement.innerHTML = `
+                                                <div class="conversation-list">
+                                                    <div class="user-chat-content">
+                                                        <div class="ctext-wrap">
+                                                            <div class="ctext-wrap-content" id="${event.message_id}">
+                                                                <p class="mb-0 ctext-content">${event.message}</p>
+                                                            </div>
+                                                            <div class="dropdown align-self-start message-box-drop">
+                                                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                    <i class="ri-more-2-fill"></i>
+                                                                </a>
+                                                                <div class="dropdown-menu">
+                                                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                                                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                                                                    <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                                                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                                                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="conversation-name">
+                                                            <span class="d-none name">You</span>
+                                                            <small class="text-muted time">${event.time}</small>
+                                                            <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }
+                                        //  else {
+                                        //     // Received message (left side)
+                                        //     messageElement.classList.add('chat-list', 'left');
+                                        //     messageElement.innerHTML = `
+                                        //     <div class="conversation-list">
+                                        //         <div class="chat-avatar">
+                                        //             <img src="${event.sender_avatar}" alt="Sender Avatar">
+                                        //         </div>
+                                        //         <div class="user-chat-content">
+                                        //             <div class="ctext-wrap">
+                                        //                 <div class="ctext-wrap-content" id="${event.message_id}">
+                                        //                     <p class="mb-0 ctext-content">${event.message}</p>
+                                        //                 </div>
+                                        //                 <div class="dropdown align-self-start message-box-drop">
+                                        //                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        //                         <i class="ri-more-2-fill"></i>
+                                        //                     </a>
+                                        //                     <div class="dropdown-menu">
+                                        //                         <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                                        //                         <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                                        //                         <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                                        //                         <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                                        //                         <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                                        //                     </div>
+                                        //                 </div>
+                                        //             </div>
+                                        //             <div class="conversation-name">
+                                        //                 <span class="d-none name">${event.sender_name}</span>
+                                        //                 <small class="text-muted time">${event.time}</small>
+                                        //                 <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                                        //             </div>
+                                        //         </div>
+                                        //     </div>
+                                        // `;
+                                        // }
+                                        chatBox.appendChild(messageElement);
+                                        chatBox.scrollTop = chatBox.scrollHeight;
+                                    });
+                            };
+                            // Mark the channel as subscribed
+                            // subscribedChannels.add(receiverId);
+                            // }
+
                         } else {
                             alert('Failed to send the message.');
                         }

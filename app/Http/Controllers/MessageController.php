@@ -26,8 +26,7 @@ public function sendMessage(Request $request)
         'is_read' => false,
     ]);
 
-    broadcast(new MessageSent($message))->toOthers();
-    event(new MyEvent('hello world'));
+    broadcast(new MessageSent($message, auth()->user()))->toOthers();
     return response()->json(['success' => true, 'message' => $message]);
 }
 
@@ -71,8 +70,6 @@ public function sendMessage(Request $request)
         })
         ->orderBy('created_at', 'asc')
         ->get(['sender_id', 'receiver_id', 'message', 'created_at']);
-
-
 
     return response()->json([
         'messages' => $messages,

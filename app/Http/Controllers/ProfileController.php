@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Container\Attributes\Storage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -19,32 +19,30 @@ class ProfileController extends Controller
      * Display the user's profile form.
      */
 
-        public function dashboard()
-        {
-            $user = Auth::user();
-            $userId = $user->id;
+    public function dashboard()
+    {
+        $user = Auth::user();
+        $userId = $user->id;
 
 
-                // Fetch users the authenticated user has chatted with
-                $users = User::whereIn('id', function ($query) use ($userId) {
-                    $query->select('sender_id')
-                        ->from('messages')
-                        ->where('receiver_id', $userId);
-                })->orWhereIn('id', function ($query) use ($userId) {
-                    $query->select('receiver_id')
-                        ->from('messages')
-                        ->where('sender_id', $userId);
-                })->where('id', '!=', $userId) // Exclude the logged-in user
-                ->distinct()
-                ->get(['id', 'name','phone','status']);
+        // Fetch users the authenticated user has chatted with
+        $users = User::whereIn('id', function ($query) use ($userId) {
+            $query->select('sender_id')
+                ->from('messages')
+                ->where('receiver_id', $userId);
+        })->orWhereIn('id', function ($query) use ($userId) {
+            $query->select('receiver_id')
+                ->from('messages')
+                ->where('sender_id', $userId);
+        })->where('id', '!=', $userId) // Exclude the logged-in user
+            ->distinct()
+            ->get(['id', 'name', 'phone', 'status']);
 
 
-            // dd($users->toArray());
-            $contacts = $user->contacts()->with('contactUser')->get();
-            // dd($contacts->toarray());
-                // Pass user data to the view
-                return view('chat-panel', compact('user','contacts','users'));
-        }
+        $contacts = $user->contacts()->with('contactUser')->get();
+        // Pass user data to the view
+        return view('chat-panel', compact('user', 'contacts', 'users'));
+    }
 
 
 
@@ -146,7 +144,7 @@ class ProfileController extends Controller
     public function show()
     {
         $user = Auth::user();
-        return view('profile.profile-settings',compact('user'));
+        return view('profile.profile-settings', compact('user'));
     }
 
 
@@ -175,38 +173,38 @@ class ProfileController extends Controller
 
 
     public function change_pin()
-        {
-            return view('profile.change-pin');
-        }
-
-        public function update_pin(Request $request)
-{
-    // Validate input fields
-    $request->validate([
-        'old_password' => 'required',
-        'new_password' => 'required|min:4|confirmed',
-    ]);
-
-    $user = auth()->user();
-
-    // Verify old password
-    if (!Hash::check($request->old_password, $user->password)) {
-        return redirect()->back()->with('error', 'Old password is incorrect.');
+    {
+        return view('profile.change-pin');
     }
 
-    // Update password
-    $user->update([
-        'password' => Hash::make($request->new_password),
-    ]);
+    public function update_pin(Request $request)
+    {
+        // Validate input fields
+        $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|min:4|confirmed',
+        ]);
 
-    return redirect()->back()->with('success', 'Password updated successfully!');
-}
+        $user = auth()->user();
+
+        // Verify old password
+        if (!Hash::check($request->old_password, $user->password)) {
+            return redirect()->back()->with('error', 'Old password is incorrect.');
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->back()->with('success', 'Password updated successfully!');
+    }
 
 
     public function updateAvatar(Request $request)
     {
         $request->validate([
-            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Image validation rules
+            'profile_picture' => 'required|mimes:jpeg,png,jpg,gif,webp|max:2048', // Image validation rules
         ]);
 
         $user = Auth::user();
@@ -241,11 +239,4 @@ class ProfileController extends Controller
         // Redirect to the PIN validation route
         return redirect()->route('profile.validate.pin')->with('toast', 'Your session has been locked. Please re-enter your PIN.');
     }
-
-
-
-
-
-
-
 }

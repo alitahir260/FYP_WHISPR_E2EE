@@ -16,7 +16,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = ['name', 'phone', 'password','status', 'profile_picture'];
+    protected $fillable = ['name', 'phone', 'password', 'status', 'profile_picture'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -41,26 +41,31 @@ class User extends Authenticatable
         ];
     }
 
-        // contacst that the logged in user has saved
-        public function contacts()
-        {
-            return $this->hasMany(Contact::class, 'user_id');
-        }
+    // contacst that the logged in user has saved
+    public function contacts()
+    {
+        return $this->hasMany(Contact::class, 'user_id');
+    }
 
-        public function addedByUsers()
-        {
-             return $this->hasMany(Contact::class, 'contact_user_id');
-        }
+    public function isFriendWith($userId)
+    {
+        return $this->contacts()->where('contact_user_id', $userId)->exists();
+    }
 
 
-        public function sentMessages()
-        {
-            return $this->hasMany(Message::class, 'sender_id');
-        }
+    public function addedByUsers()
+    {
+        return $this->hasMany(Contact::class, 'contact_user_id');
+    }
 
-        public function receivedMessages()
-        {
-            return $this->hasMany(Message::class, 'receiver_id');
-        }
 
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
 }

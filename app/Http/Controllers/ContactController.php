@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Validation\ValidationException;
 use App\Models\Contact;
 use App\Models\User;
@@ -12,12 +13,12 @@ class ContactController extends Controller
     {
 
 
-        $request->validate([
-            'phone' => 'required|numeric', // Validate phone input
-        ]);
+        // $request->validate([
+        //     'phone' => 'required|numeric', // Validate phone input
+        // ]);
 
         // Check if the phone number exists in the users table
-        $user = User::where('phone', $request->phone)->first();
+        // $user = User::where('phone', $request->phone)->first();
 
         // if ($user) {
         //     return response()->json(['exists' => true, 'message' => 'Phone number exists.']);
@@ -28,7 +29,13 @@ class ContactController extends Controller
             'phone' => 'required|numeric|exists:users,phone',
         ]);
 
+        if($request->phone == auth()->user()->phone){
+            return response()->json(['success' => false, 'message' => 'You cannot add yourself as a contact.']);
+        }
+
         $contactUser = User::where('phone', $request->phone)->first();
+
+        // dd($contactUser);
 
         if (!$contactUser) {
             return response()->json(['success' => false, 'message' => 'User with this phone number does not exist.']);
@@ -43,7 +50,7 @@ class ContactController extends Controller
         Contact::create([
             'user_id' => $user->id,
             'contact_user_id' => $contactUser->id,
-            'name' => $contactUser->name,
+            'name' => $contactUser->name ?? 'No Name',
             'phone' => $contactUser->phone,
         ]);
 
@@ -53,65 +60,63 @@ class ContactController extends Controller
 
     public function store(Request $request)
     {
-       // Step 1: Validate the phone number
-
-
-       try {
         // Step 1: Validate the phone number
-        $validated = $request->validate([
-            'phone' => 'required|string|exists:users,phone', // Ensure the phone exists in the `users` table
-        ]);
 
-        // Step 2: Get the logged-in user
-        $currentUser = auth()->user();
-        if (!$currentUser) {
-            return redirect()->back()->with('error', 'You must be logged in to add a contact.');
+
+        try {
+            // Step 1: Validate the phone number
+            $validated = $request->validate([
+                'phone' => 'required|exists:users,phone', // Ensure the phone exists in the `users` table
+            ]);
+
+            // Step 2: Get the logged-in user
+            $currentUser = auth()->user();
+            if (!$currentUser) {
+                return redirect()->back()->with('error', 'You must be logged in to add a contact.');
+            }
+
+            // Step 3: Find the contact user
+            $contactUser = User::where('phone', $validated['phone'])->first();
+            if (!$contactUser) {
+                return redirect()->back()->with('error', 'The phone number entered does not match any user.');
+            }
+
+            // Step 4: Prevent adding oneself
+            if ($currentUser->id === $contactUser->id) {
+                return redirect()->back()->with('error', 'You cannot add yourself as a contact.');
+            }
+
+            // Step 5: Check if the contact already exists
+            $existingContact = Contact::where('user_id', $currentUser->id)
+                ->where('contact_user_id', $contactUser->id)
+                ->first();
+
+            if ($existingContact) {
+                return redirect()->back()->with('error', 'This contact is already added.');
+            }
+
+            // Step 6: Create the contact manually
+            $contact = Contact::create([
+                'name' => $contactUser->name,
+                'phone' => $contactUser->phone,
+                'user_id' => $currentUser->id, // The user adding the contact
+                'contact_user_id' => $contactUser->id, // The user being added as a contact
+            ]);
+
+            // Step 7: Return success
+            return redirect()->back()->with('success', 'Contact added successfully!');
+        } catch (ValidationException $e) {
+            // Return validation errors as a toast notification
+            return redirect()->back()->with('error', $e->validator->errors()->first());
+        } catch (\Exception $e) {
+            // Handle unexpected errors
+            return redirect()->back()->with('error', 'An unexpected error occurred. Please try again.');
         }
-
-        // Step 3: Find the contact user
-        $contactUser = User::where('phone', $validated['phone'])->first();
-        if (!$contactUser) {
-            return redirect()->back()->with('error', 'The phone number entered does not match any user.');
-        }
-
-        // Step 4: Prevent adding oneself
-        if ($currentUser->id === $contactUser->id) {
-            return redirect()->back()->with('error', 'You cannot add yourself as a contact.');
-        }
-
-        // Step 5: Check if the contact already exists
-        $existingContact = Contact::where('user_id', $currentUser->id)
-                                  ->where('contact_user_id', $contactUser->id)
-                                  ->first();
-
-        if ($existingContact) {
-            return redirect()->back()->with('error', 'This contact is already added.');
-        }
-
-        // Step 6: Create the contact manually
-        $contact = Contact::create([
-            'name' => $contactUser->name,
-            'phone' => $contactUser->phone,
-            'user_id' => $currentUser->id, // The user adding the contact
-            'contact_user_id' => $contactUser->id, // The user being added as a contact
-        ]);
-
-        // Step 7: Return success
-        return redirect()->back()->with('success', 'Contact added successfully!');
-    } catch (ValidationException $e) {
-        // Return validation errors as a toast notification
-        return redirect()->back()->with('error', $e->validator->errors()->first());
-    } catch (\Exception $e) {
-        // Handle unexpected errors
-        return redirect()->back()->with('error', 'An unexpected error occurred. Please try again.');
     }
-}
 
 
     public function profile_view()
     {
         return view('profile-page');
     }
-
-
 }

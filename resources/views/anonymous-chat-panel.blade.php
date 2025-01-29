@@ -4,15 +4,14 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Chat | Whispr - Admin & Dashboard Template</title>
+    <title>Anonymous Chat | Whispr - Admin & Dashboard Template</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
     <meta content="{{auth()->user() ? auth()->user()->id : $user->id }}" name="user-id" />
-    <meta content="" name="chat-code" />
-
+    <meta content="{{ session('chat_code') }}" name="chat-code" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="http://127.0.0.1:8000/build/images/favicon.ico">
     <link rel="stylesheet" href="http://127.0.0.1:8000/build/libs/glightbox/css/glightbox.min.css">
@@ -512,10 +511,10 @@
                                                     <li>
                                                         <a href="#"
                                                             class="d-flex align-items-center justify-content-between py-2 px-3"
-                                                            onclick="loadMessages({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->phone) }}' ,  '{{ addslashes($user->status) }}')">
+                                                            onclick="loadAnonymousMessages({{ $user->id }}, 'Anonymous User', '{{ session('chat_code') }}' ,  'Anonymous')"
+                                                            >
                                                             <div class="d-flex align-items-center">
-                                                                <h5 class="text-truncate fs-14 mb-0">
-                                                                    {{ Auth::user() ? $user->name ?? 'No Name' : 'Anonymous User' }}</h5>
+                                                                <h5 class="text-truncate fs-14 mb-0">Anonymous User</h5>
                                                             </div>
                                                             <div>
                                                                 <span
@@ -553,7 +552,7 @@
                                 <div class="tab-pane" id="contacts" role="tabpanel">
                                     <div class="chat-room-list pt-3" data-simplebar>
                                         <ul class="list-unstyled chat-list chat-user-list" id="contact-list">
-                                            @foreach ($contacts as $contact)
+                                            {{-- @foreach ($contacts as $contact)
                                                 <li>
                                                     <a href="#"
                                                         class="d-flex align-items-center justify-content-between py-2 px-3"
@@ -568,7 +567,7 @@
                                                         </div>
                                                     </a>
                                                 </li>
-                                            @endforeach
+                                            @endforeach --}}
                                         </ul>
                                     </div>
                                 </div>
@@ -828,7 +827,7 @@
 
                                         <div class="chat-input-section p-3 p-lg-4">
 
-                                            <form id="chatinput-form" enctype="multipart/form-data">
+                                            <form id="anonymous-chatinput-form" enctype="multipart/form-data">
                                                 <div class="row g-0 align-items-center">
                                                     <div class="col-auto">
                                                         <div class="chat-input-links me-2">
@@ -1949,127 +1948,445 @@
         }
     }
 
+    // //LOADING MESSAGES THROUGH AJAX CALL
+    // loadAnonymousMessages = async function(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
+    //     const conversationList = document.getElementById('users-conversation');
+    //     const loader = document.getElementById('elmLoader');
+    //     const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
+    //     const receiverPhoneElement = document.getElementById(
+    //         'receiver-phone'); // Add an element for the phone if necessary
+    //     const receiverNameContact = document.getElementById(
+    //         'receiver-name-contact'); // New element for contact header
+    //     const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
+    //     const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
 
 
-    //LOADING MESSAGES THROUGH AJAX CALL
-    async function loadMessages(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
-        const conversationList = document.getElementById('users-conversation');
-        const loader = document.getElementById('elmLoader');
-        const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
-        const receiverPhoneElement = document.getElementById(
-            'receiver-phone'); // Add an element for the phone if necessary
-        const receiverNameContact = document.getElementById(
-            'receiver-name-contact'); // New element for contact header
-        const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
-        const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
+    //     const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
 
 
-        const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
+    //     // Update the receiver's name dynamically
+    //     receiverNameElement.textContent = contactUserName; // Set the receiver's name here
+    //     receiverPhoneElement.textContent = contactUserPhone; //users phone
+    //     receiverNameLink.textContent = contactUserName; // Update the header link
+    //     receiverNameContact.textContent = contactUserName; // Update the contact header name
+    //     receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
+    //     receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
+
+    //     // Show loader and clear previous messages
+    //     loader.style.display = 'block';
+    //     conversationList.innerHTML = '';
+
+    //     try {
+    //         // Make AJAX call to get messages
+    //         // const response = await fetch(`/messages/${contactUserId}`, {
+    //         //     method: 'GET',
+    //         //     headers: {
+    //         //         'Content-Type': 'application/json',
+    //         //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+    //         //             'content')
+    //         //     }
+    //         // });
+
+    //         // if (!response.ok) {
+    //         //     alert('Failed to load messages.');
+    //         //     return;
+    //         // }
+
+    //         // const data = await response.json();
+
+    //         // Hide loader
+    //         // loader.style.display = 'none';
+
+    //         // if (data.messages.length === 0) {
+    //         //     conversationList.innerHTML = '<li class="text-center text-muted">No messages found</li>';
+    //         //     return;
+    //         // }
+
+    //         // Append messages to the conversation list
+    //         // data.messages.forEach(message => {
+    //         //     const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
+    //         //     const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' :
+    //         //         'bg-light';
+    //         //     const messageHTML = `
+    //         //     <li class="d-flex ${alignment} my-2">
+    //         //         <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
+    //         //             <p class="mb-0">${message.message}</p>
+    //         //             <small class="text-muted">${message.created_at}</small>
+    //         //         </div>
+    //         //     </li>
+    //         // `;
+    //         //     conversationList.insertAdjacentHTML('beforeend', messageHTML);
+    //         // });
+    //     // } catch (error) {
+    //     //     console.error('Error:', error);
+    //     //     alert('An error occurred while loading messages.');
+    //     } finally {
+    //         loader.style.display = 'none';
+    //     }
+
+    // }
 
 
-        // Update the receiver's name dynamically
-        receiverNameElement.textContent = contactUserName; // Set the receiver's name here
-        receiverPhoneElement.textContent = contactUserPhone; //users phone
-        receiverNameLink.textContent = contactUserName; // Update the header link
-        receiverNameContact.textContent = contactUserName; // Update the contact header name
-        receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
-        receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
+    // send anonymous chat message
 
-        // Show loader and clear previous messages
-        loader.style.display = 'block';
-        conversationList.innerHTML = '';
+     //chat form
+    //  var currentChatId = "users-chat";
+    // var currentSelectedChat = "users";
+    //  var anonymousChatForm = document.querySelector("#anonymous-chatinput-form");
+    // var chatInput = document.querySelector("#chat-input");
+    // var chatInputfeedback = document.querySelector(".chat-input-feedback");
+    // const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
 
-        try {
-            // Make AJAX call to get messages
-            const response = await fetch(`/messages/${contactUserId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                        'content')
-                }
-            });
-
-            if (!response.ok) {
-                alert('Failed to load messages.');
-                return;
-            }
-
-            const data = await response.json();
-
-            // Hide loader
-            loader.style.display = 'none';
-
-            if (data.messages.length === 0) {
-                conversationList.innerHTML = '<li class="text-center text-muted">No messages found</li>';
-                return;
-            }
-
-            // Append messages to the conversation list
-            data.messages.forEach(message => {
-                const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
-                const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' :
-                    'bg-light';
-                const messageHTML = `
-                <li class="d-flex ${alignment} my-2">
-                    <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
-                        <p class="mb-0">${message.message}</p>
-                        <small class="text-muted">${message.created_at}</small>
-                    </div>
-                </li>
-            `;
-                conversationList.insertAdjacentHTML('beforeend', messageHTML);
-            });
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading messages.');
-        } finally {
-            loader.style.display = 'none';
+    function currentTime() {
+        var ampm = new Date().getHours() >= 12 ? "pm" : "am";
+        var hour =
+            new Date().getHours() > 12 ?
+                new Date().getHours() % 12 :
+                new Date().getHours();
+        var minute =
+            new Date().getMinutes() < 10 ?
+                "0" + new Date().getMinutes() :
+                new Date().getMinutes();
+        if (hour < 10) {
+            return "0" + hour + ":" + minute + " " + ampm;
+        } else {
+            return hour + ":" + minute + " " + ampm;
         }
-
     }
+    setInterval(currentTime, 1000);
 
-    // const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
+    var messageIds = 0;
+
+    // if (anonymousChatForm) {
+    //     let subscribedChannels = new Set(); // To keep track of the subscribed channels
+    //     //add an item to the List, including to local storage
+    //     anonymousChatForm.addEventListener("submit", function (e) {
+    //         e.preventDefault();
+
+    //         var isreplyMessage = false;
+    //         var chatId = currentChatId;
+    //         var chatReplyId = currentChatId;
+
+    //         var chatInputValue = chatInput.value
+
+    //         if (chatInputValue.length === 0) {
+    //             chatInputfeedback.classList.add("show");
+    //             setTimeout(function () {
+    //                 chatInputfeedback.classList.remove("show");
+    //             }, 2000);
+
+    //         } else {
+
+    //             const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
     //             const receiverId = receiverIdInput.value; // Get the receiver's ID dynamically
     //             console.log(receiverId);
 
-    //             Echo.private(`chat.${receiverId}`)
-    //                 .listen('MessageSent', (event) => {
-    //                     console.log('Message received:', event.message);
 
-    //                     const chatBox = document.getElementById('users-conversation'); // Assume you have a chat box
-    //                     const messageElement = document.createElement('div');
-    //                     messageElement.classList.add('chat-message', 'received');
-    //                     messageElement.textContent = event.message;
-    //                     chatBox.appendChild(messageElement);
-    //                     chatBox.scrollTop = chatBox.scrollHeight;
-    //                 });
-
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     const chatForm = document.getElementById('chatinput-form');
-    //     const chatInput = document.getElementById('chat-input');
-
-    //         .then((response) => response.json())
-    //         .then((data) => {
-    //             if (data.success) {
-    //                 chatInput.value = ''; // Clear input field
-    //                 // Append the new message to the chat
-    //                 const chatBox = document.getElementById('users-conversation'); // Assume you have a chat box
-    //                 const messageElement = document.createElement('div');
-    //                 messageElement.classList.add('chat-message', 'sent');
-    //                 messageElement.textContent = message;
-    //                 chatBox.appendChild(messageElement);
-    //                 chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
-    //             } else {
-    //                 alert('Failed to send the message.');
+    //             const message = chatInputValue;
+    //             if (!message) {
+    //                 alert('Please enter a message.');
+    //                 return;
     //             }
-    //         })
-    //         .catch((error) => console.error('Error:', error));
-    //     });
-    // });
 
 
+    //             // AJAX call to send the message
+    //             fetch('/anonymous/messages/send', {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+    //                 },
+    //                 body: JSON.stringify({
+    //                     code: {{session('chat_code')}}, // Receiver's ID
+    //                     receiver_id: receiverId, // Receiver's ID
+    //                     message: message,
+    //                 }),
+    //             })
+    //                 .then((response) => response.json())
+    //                 .then((data) => {
+    //                     if (data.success) {
+    //                         chatInput.value = '';
 
+    //                         var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+    //                         if (userId !== receiverId) {
+    //                             console.log('userId:', userId);
+
+    //                             Echo.private(`chat.${receiverId}`)
+    //                                 .listen('MessageSent', (event) => {
+    //                                     console.log('Message received:', event.message);
+
+    //                                     // Get the chat box container where messages are displayed
+    //                                     const chatBox = document.getElementById('users-conversation');
+
+    //                                     // Create the new message element based on the sender
+    //                                     const messageElement = document.createElement('li');
+
+
+    //                                     if (event.receiver_id === userId) {
+
+    //                                         // Sent message (right side)
+    //                                         messageElement.classList.add('chat-list', 'right');
+    //                                         messageElement.innerHTML = `
+    //                                             <div class="conversation-list">
+    //                                                 <div class="user-chat-content">
+    //                                                     <div class="ctext-wrap">
+    //                                                         <div class="ctext-wrap-content" id="${event.message_id}">
+    //                                                             <p class="mb-0 ctext-content">${event.message}</p>
+    //                                                         </div>
+    //                                                         <div class="dropdown align-self-start message-box-drop">
+    //                                                             <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    //                                                                 <i class="ri-more-2-fill"></i>
+    //                                                             </a>
+    //                                                             <div class="dropdown-menu">
+    //                                                                 <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+    //                                                                 <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+    //                                                                 <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+    //                                                                 <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+    //                                                                 <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+    //                                                             </div>
+    //                                                         </div>
+    //                                                     </div>
+    //                                                     <div class="conversation-name">
+    //                                                         <span class="d-none name">You</span>
+    //                                                         <small class="text-muted time">${event.time}</small>
+    //                                                         <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+    //                                                     </div>
+    //                                                 </div>
+    //                                             </div>
+    //                                         `;
+    //                                     }
+
+    //                                     chatBox.appendChild(messageElement);
+    //                                     chatBox.scrollTop = chatBox.scrollHeight;
+    //                                 });
+    //                         };
+
+    //                     } else {
+    //                         alert('Failed to send the message.');
+    //                     }
+    //                 })
+    //                 .catch((error) => console.error('Error:', error));
+
+    //             if (isreplyMessage == true) {
+    //                 getReplyChatList(chatReplyId, chatInputValue);
+    //                 isreplyMessage = false;
+    //             } else {
+    //                 getChatList(chatId, chatInputValue);
+    //             }
+    //             scrollToBottom(chatId || chatReplyId);
+    //         }
+    //         chatInput.value = "";
+
+    //         document.getElementById("close_toggle").click();
+    //     })
+    // }
+
+    //message with reply
+    var getReplyChatList = function (chatReplyId, chatReplyItems) {
+        var chatReplyUser = document.querySelector(".replyCard .replymessage-block .flex-grow-1 .conversation-name").innerHTML;
+        var chatReplyMessage = document.querySelector(".replyCard .replymessage-block .flex-grow-1 .mb-0").innerText;
+
+        messageIds++;
+        var chatreplyConList = document.getElementById(chatReplyId);
+        var itemReplyList = chatreplyConList.querySelector(".chat-conversation-list");
+        if (chatReplyItems != null) {
+            itemReplyList.insertAdjacentHTML(
+                "beforeend",
+                '<li class="chat-list right" id="chat-list-' + messageIds + '" >\
+                <div class="conversation-list">\
+                    <div class="user-chat-content">\
+                        <div class="ctext-wrap">\
+                            <div class="ctext-wrap-content">\
+                            <div class="replymessage-block mb-0 d-flex align-items-start">\
+                        <div class="flex-grow-1">\
+                            <h5 class="conversation-name">' + chatReplyUser + '</h5>\
+                            <p class="mb-0">' + chatReplyMessage + '</p>\
+                        </div>\
+                        <div class="flex-shrink-0">\
+                            <button type="button" class="btn btn-sm btn-link mt-n2 me-n3 font-size-18">\
+                            </button>\
+                        </div>\
+                    </div>\
+                                <p class="mb-0 ctext-content mt-1">\
+                                    ' + chatReplyItems + '\
+                                </p>\
+                            </div>\
+                            <div class="dropdown align-self-start message-box-drop">\
+                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                    <i class="ri-more-2-fill"></i>\
+                                </a>\
+                                <div class="dropdown-menu">\
+                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>\
+                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>\
+                                    <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>\
+                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>\
+                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>\
+                            </div>\
+                        </div>\
+                    </div>\
+                    <div class="conversation-name">\
+                        <small class="text-muted time">' + currentTime() + '</small>\
+                        <span class="text-success check-message-icon"><i class="bx bx-check"></i></span>\
+                    </div>\
+                </div>\
+            </div>\
+        </li>'
+            );
+            messageboxcollapse++;
+        }
+
+        // remove chat list
+        var newChatList = document.getElementById("chat-list-" + messageIds);
+        newChatList.querySelectorAll(".delete-item").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                itemList.removeChild(newChatList);
+            });
+        });
+
+        //Copy Clipboard alert
+        newChatList.querySelectorAll(".copy-message").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                document.getElementById("copyClipBoard").style.display = "block";
+                document.getElementById("copyClipBoardChannel").style.display = "block";
+                setTimeout(hideclipboardNew, 1000);
+
+                function hideclipboardNew() {
+                    document.getElementById("copyClipBoard").style.display = "none";
+                    document.getElementById("copyClipBoardChannel").style.display = "none";
+                }
+            });
+        });
+
+        newChatList.querySelectorAll(".reply-message").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                var replyMessage = subitem.closest(".ctext-wrap").children[0].children[0].innerText;
+                var replyuser = document.querySelector(".user-chat-topbar .text-truncate .username").innerHTML;
+                document.querySelector(".replyCard .replymessage-block .flex-grow-1 .mb-0").innerText = replyMessage;
+                var msgOwnerName = (subitem.closest(".chat-list")) ? subitem.closest(".chat-list").classList.contains("left") ? replyuser : 'You' : replyuser;
+                document.querySelector(".replyCard .replymessage-block .flex-grow-1 .conversation-name").innerText = msgOwnerName;
+            });
+        });
+
+        //Copy Message
+        newChatList.querySelectorAll(".copy-message").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                newChatList.childNodes[1].children[1].firstElementChild.firstElementChild.getAttribute("id");
+                isText = newChatList.childNodes[1].children[1].firstElementChild.firstElementChild.innerText;
+                navigator.clipboard.writeText(isText);
+            });
+        });
+    };
+
+    //Append New Message
+    var getChatList = function (chatid, chatItems) {
+        messageIds++;
+        var chatConList = document.getElementById(chatid);
+        var itemList = chatConList.querySelector(".chat-conversation-list");
+
+        if (chatItems != null) {
+            itemList.insertAdjacentHTML(
+                "beforeend",
+                '<li class="chat-list right" id="chat-list-' +
+                messageIds +
+                '" >\
+                <div class="conversation-list">\
+                    <div class="user-chat-content">\
+                        <div class="ctext-wrap">\
+                            <div class="ctext-wrap-content">\
+                                <p class="mb-0 ctext-content">\
+                                    ' +
+                chatItems + '\
+                                </p>\
+                            </div>\
+                            <div class="dropdown align-self-start message-box-drop">\
+                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                    <i class="ri-more-2-fill"></i>\
+                                </a>\
+                                <div class="dropdown-menu">\
+                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>\
+                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>\
+                                    <a class="dropdown-item copy-message" href="#""><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>\
+                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>\
+                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>\
+                            </div>\
+                        </div>\
+                    </div>\
+                    <div class="conversation-name">\
+                        <small class="text-muted time">' +
+                currentTime() +
+                '</small>\
+                        <span class="text-success check-message-icon"><i class="bx bx-check"></i></span>\
+                    </div>\
+                </div>\
+            </div>\
+        </li>'
+            );
+        }
+
+        // remove chat list
+        var newChatList = document.getElementById("chat-list-" + messageIds);
+        newChatList.querySelectorAll(".delete-item").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                itemList.removeChild(newChatList);
+            });
+        });
+
+        //Copy Message
+        newChatList.querySelectorAll(".copy-message").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                var currentValue =
+                    newChatList.childNodes[1].firstElementChild.firstElementChild
+                        .firstElementChild.firstElementChild.innerText;
+                navigator.clipboard.writeText(currentValue);
+            });
+        });
+
+        //Copy Clipboard alert
+        newChatList.querySelectorAll(".copy-message").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                document.getElementById("copyClipBoard").style.display = "block";
+                setTimeout(hideclipboardNew, 1000);
+
+                function hideclipboardNew() {
+                    document.getElementById("copyClipBoard").style.display = "none";
+                }
+            });
+        });
+
+        //reply Message model
+        newChatList.querySelectorAll(".reply-message").forEach(function (subitem) {
+            subitem.addEventListener("click", function () {
+                var replyToggleOpenNew = document.querySelector(".replyCard");
+                var replyToggleCloseNew = document.querySelector("#close_toggle");
+                var replyMessageNew = subitem.closest(".ctext-wrap").children[0].children[0].innerText;
+                var replyUserNew = document.querySelector(".replyCard .replymessage-block .flex-grow-1 .conversation-name").innerHTML;
+                isreplyMessage = true;
+                replyToggleOpenNew.classList.add("show");
+                replyToggleCloseNew.addEventListener("click", function () {
+                    replyToggleOpenNew.classList.remove("show");
+                });
+                var msgOwnerName = (subitem.closest(".chat-list")) ? subitem.closest(".chat-list").classList.contains("left") ? replyUserNew : 'You' : replyUserNew;
+                document.querySelector(".replyCard .replymessage-block .flex-grow-1 .conversation-name").innerText = msgOwnerName;
+                document.querySelector(".replyCard .replymessage-block .flex-grow-1 .mb-0").innerText = replyMessageNew;
+            });
+        });
+    };
+
+    // // Scroll to Bottom
+    function scrollToBottom(id) {
+        setTimeout(function () {
+            var simpleBar = (document.getElementById(id).querySelector("#chat-conversation .simplebar-content-wrapper")) ?
+                document.getElementById(id).querySelector("#chat-conversation .simplebar-content-wrapper") : ''
+
+            var offsetHeight = document.getElementsByClassName("chat-conversation-list")[0] ?
+                document.getElementById(id).getElementsByClassName("chat-conversation-list")[0].scrollHeight - window.innerHeight + 335 : 0;
+            if (offsetHeight)
+                simpleBar.scrollTo({
+                    top: offsetHeight,
+                    behavior: "smooth"
+                });
+        }, 100);
+    }
 
     function toggleDropdown() {
         const dropdown = document.getElementById('dropdownForm');
