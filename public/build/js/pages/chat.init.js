@@ -637,7 +637,10 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
                     alert('Please enter a message.');
                     return;
                 }
-
+                
+                if(!chatCode || chatCode == null){
+                    window.location.href = '/login';
+                }
 
                 // AJAX call to send the message
                 fetch('/anonymous/messages/send', {
@@ -656,60 +659,6 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
                     .then((data) => {
                         if (data.success) {
                             chatInput.value = '';
-
-                            var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
-                            if (userId !== receiverId) {
-                                console.log('userId:', userId);
-
-                                Echo.private(`chat.${receiverId}`)
-                                    .listen('MessageSent', (event) => {
-                                        console.log('Message received:', event.message);
-
-                                        // Get the chat box container where messages are displayed
-                                        const chatBox = document.getElementById('users-conversation');
-
-                                        // Create the new message element based on the sender
-                                        const messageElement = document.createElement('li');
-
-
-                                        if (event.receiver_id === userId) {
-
-                                            // Sent message (right side)
-                                            messageElement.classList.add('chat-list', 'right');
-                                            messageElement.innerHTML = `
-                                                <div class="conversation-list">
-                                                    <div class="user-chat-content">
-                                                        <div class="ctext-wrap">
-                                                            <div class="ctext-wrap-content" id="${event.message_id}">
-                                                                <p class="mb-0 ctext-content">${event.message}</p>
-                                                            </div>
-                                                            <div class="dropdown align-self-start message-box-drop">
-                                                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                    <i class="ri-more-2-fill"></i>
-                                                                </a>
-                                                                <div class="dropdown-menu">
-                                                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
-                                                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
-                                                                    <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
-                                                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
-                                                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="conversation-name">
-                                                            <span class="d-none name">You</span>
-                                                            <small class="text-muted time">${event.time}</small>
-                                                            <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            `;
-                                        }
-
-                                        chatBox.appendChild(messageElement);
-                                        chatBox.scrollTop = chatBox.scrollHeight;
-                                    });
-                            };
 
                         } else {
                             alert('Failed to send the message.');
@@ -823,94 +772,94 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
 
                             // if (!subscribedChannels.has(receiverId)) {
 
-                            var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
-                            if (userId !== receiverId) {
-                                console.log('userId:', userId);
+                            // var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+                            // if (userId !== receiverId) {
+                            //     console.log('userId:', userId);
 
-                                Echo.private(`chat.${receiverId}`)
-                                    .listen('MessageSent', (event) => {
-                                        console.log('Message received:', event.message);
+                            //     Echo.private(`chat.${receiverId}`)
+                            //         .listen('MessageSent', (event) => {
+                            //             console.log('Message received:', event.message);
 
-                                        // Get the chat box container where messages are displayed
-                                        const chatBox = document.getElementById('users-conversation');
+                            //             // Get the chat box container where messages are displayed
+                            //             const chatBox = document.getElementById('users-conversation');
 
-                                        // Create the new message element based on the sender
-                                        const messageElement = document.createElement('li');
+                            //             // Create the new message element based on the sender
+                            //             const messageElement = document.createElement('li');
 
-                                        console.log('appending..');
+                            //             console.log('appending..');
 
-                                        if (event.receiver_id === userId) {
+                            //             if (event.receiver_id === userId) {
 
-                                            // Sent message (right side)
-                                            messageElement.classList.add('chat-list', 'right');
-                                            messageElement.innerHTML = `
-                                                <div class="conversation-list">
-                                                    <div class="user-chat-content">
-                                                        <div class="ctext-wrap">
-                                                            <div class="ctext-wrap-content" id="${event.message_id}">
-                                                                <p class="mb-0 ctext-content">${event.message}</p>
-                                                            </div>
-                                                            <div class="dropdown align-self-start message-box-drop">
-                                                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                    <i class="ri-more-2-fill"></i>
-                                                                </a>
-                                                                <div class="dropdown-menu">
-                                                                    <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
-                                                                    <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
-                                                                    <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
-                                                                    <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
-                                                                    <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="conversation-name">
-                                                            <span class="d-none name">You</span>
-                                                            <small class="text-muted time">${event.time}</small>
-                                                            <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            `;
-                                        }
-                                        //  else {
-                                        //     // Received message (left side)
-                                        //     messageElement.classList.add('chat-list', 'left');
-                                        //     messageElement.innerHTML = `
-                                        //     <div class="conversation-list">
-                                        //         <div class="chat-avatar">
-                                        //             <img src="${event.sender_avatar}" alt="Sender Avatar">
-                                        //         </div>
-                                        //         <div class="user-chat-content">
-                                        //             <div class="ctext-wrap">
-                                        //                 <div class="ctext-wrap-content" id="${event.message_id}">
-                                        //                     <p class="mb-0 ctext-content">${event.message}</p>
-                                        //                 </div>
-                                        //                 <div class="dropdown align-self-start message-box-drop">
-                                        //                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        //                         <i class="ri-more-2-fill"></i>
-                                        //                     </a>
-                                        //                     <div class="dropdown-menu">
-                                        //                         <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
-                                        //                         <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
-                                        //                         <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
-                                        //                         <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
-                                        //                         <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
-                                        //                     </div>
-                                        //                 </div>
-                                        //             </div>
-                                        //             <div class="conversation-name">
-                                        //                 <span class="d-none name">${event.sender_name}</span>
-                                        //                 <small class="text-muted time">${event.time}</small>
-                                        //                 <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
-                                        //             </div>
-                                        //         </div>
-                                        //     </div>
-                                        // `;
-                                        // }
-                                        chatBox.appendChild(messageElement);
-                                        chatBox.scrollTop = chatBox.scrollHeight;
-                                    });
-                            };
+                            //                 // Sent message (right side)
+                            //                 messageElement.classList.add('chat-list', 'right');
+                            //                 messageElement.innerHTML = `
+                            //                     <div class="conversation-list">
+                            //                         <div class="user-chat-content">
+                            //                             <div class="ctext-wrap">
+                            //                                 <div class="ctext-wrap-content" id="${event.message_id}">
+                            //                                     <p class="mb-0 ctext-content">${event.message}</p>
+                            //                                 </div>
+                            //                                 <div class="dropdown align-self-start message-box-drop">
+                            //                                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            //                                         <i class="ri-more-2-fill"></i>
+                            //                                     </a>
+                            //                                     <div class="dropdown-menu">
+                            //                                         <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                            //                                         <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                            //                                         <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                            //                                         <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                            //                                         <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                            //                                     </div>
+                            //                                 </div>
+                            //                             </div>
+                            //                             <div class="conversation-name">
+                            //                                 <span class="d-none name">You</span>
+                            //                                 <small class="text-muted time">${event.time}</small>
+                            //                                 <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                            //                             </div>
+                            //                         </div>
+                            //                     </div>
+                            //                 `;
+                            //             }
+                            //             //  else {
+                            //             //     // Received message (left side)
+                            //             //     messageElement.classList.add('chat-list', 'left');
+                            //             //     messageElement.innerHTML = `
+                            //             //     <div class="conversation-list">
+                            //             //         <div class="chat-avatar">
+                            //             //             <img src="${event.sender_avatar}" alt="Sender Avatar">
+                            //             //         </div>
+                            //             //         <div class="user-chat-content">
+                            //             //             <div class="ctext-wrap">
+                            //             //                 <div class="ctext-wrap-content" id="${event.message_id}">
+                            //             //                     <p class="mb-0 ctext-content">${event.message}</p>
+                            //             //                 </div>
+                            //             //                 <div class="dropdown align-self-start message-box-drop">
+                            //             //                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            //             //                         <i class="ri-more-2-fill"></i>
+                            //             //                     </a>
+                            //             //                     <div class="dropdown-menu">
+                            //             //                         <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                            //             //                         <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                            //             //                         <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                            //             //                         <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                            //             //                         <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                            //             //                     </div>
+                            //             //                 </div>
+                            //             //             </div>
+                            //             //             <div class="conversation-name">
+                            //             //                 <span class="d-none name">${event.sender_name}</span>
+                            //             //                 <small class="text-muted time">${event.time}</small>
+                            //             //                 <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
+                            //             //             </div>
+                            //             //         </div>
+                            //             //     </div>
+                            //             // `;
+                            //             // }
+                            //             chatBox.appendChild(messageElement);
+                            //             chatBox.scrollTop = chatBox.scrollHeight;
+                            //         });
+                            // };
                             // Mark the channel as subscribed
                             // subscribedChannels.add(receiverId);
                             // }

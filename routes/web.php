@@ -43,14 +43,20 @@ Route::get('/anonymous-chat/code', [AnonymousController::class, 'showCode'])->na
 Route::post('/anonymous/messages/send', [AnonymousController::class, 'sendAnonymousMessage'])->name('anonymous.messages.send');
 Route::post('/anonymous-chat/connect', [AnonymousController::class, 'connect'])->name('anonymous.chat.connect');
 
+Route::get('/anonymous-chat/disconnect', [AnonymousController::class, 'disconnect'])->name('anonymous.chat.disconnect');
+
 Route::get('/anonymous/chat/{chat_code}', function ($chat_code) {
     $user = AnonymousUser::where('session_id', session()->getId())->first();
+    
+    if (!$user) {
+        return redirect()->route('anonymous.code')->with('error', 'Invalid chat code');
+    }
 
     session()->put('chat_code', $chat_code);
     // Retrieve the other user in the chat session
     $user2 = AnonymousUser::where('code', $chat_code)->where('id', '!=', $user->id)->first();
     $users = [$user2];
-    // return back();
+
     return view('anonymous-chat-panel', compact('user', 'users'));
 })->name('anonymous.chat');
 

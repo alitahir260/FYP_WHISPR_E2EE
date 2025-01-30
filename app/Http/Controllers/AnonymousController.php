@@ -92,4 +92,17 @@ class AnonymousController extends Controller
 
         return response()->json(['success' => true, 'message' => $data]);
     }
+
+    public function disconnect()
+    {
+        logger('dissconecting');
+        logger(session('chat_code'));
+        $users = AnonymousUser::where('code', session('chat_code'))->get();
+        logger($users);
+        foreach ($users as $user) {
+            $user->delete();
+        }
+        session()->forget('chat_code');
+        return redirect()->route('profile.validate.pin');
+    }
 }

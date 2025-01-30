@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
-    <meta content="{{auth()->user() ? auth()->user()->id : $user->id }}" name="user-id" />
+    <meta content="{{$user->id }}" name="user-id" />
     <meta content="{{ session('chat_code') }}" name="chat-code" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="http://127.0.0.1:8000/build/images/favicon.ico">
@@ -30,8 +30,13 @@
 
 </head>
 
-<body>
 
+<body>
+    @php
+        if(!$user){
+            return redirect()->route('login');
+        }
+    @endphp
     <!-- <body data-layout="horizontal"> -->
     <!-- Begin page -->
     <div id="layout-wrapper">
@@ -284,32 +289,14 @@
                                     </span>
                                 </span>
                             </button>
-                            @if (Auth::user())
                                 <div class="dropdown-menu dropdown-menu-end">
                                     <!-- item-->
-                                    <h6 class="dropdown-header">Welcome {{ Auth::user()->name}}</h6>
-                                    <a class="dropdown-item" href="{{ route('profile.edit') }}"><i
-                                            class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
-                                            class="align-middle">Profile</span></a>
-
-                                    <a class="dropdown-item" href="{{ route('profile.settings') }}"><span
-                                            class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
-                                            class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
-                                            class="align-middle">Settings</span></a>
-                                    <a class="dropdown-item" href="{{ route('profile.lock.screen') }}">
-                                        <i class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i>
-                                        <span class="align-middle">Lock Screen</span>
-                                    </a>
-                                    <a class="dropdown-item " href="javascript:void();"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
+                                    <h6 class="dropdown-header">Welcome Anonymous</h6>
+                                    <a class="dropdown-item " href="{{route('anonymous.chat.disconnect')}}"><i
                                             class="bx bx-power-off font-size-16 align-middle me-1"></i> <span
-                                            key="t-logout">Logout</span></a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                        style="display: none;">
-                                        @csrf
-                                    </form>
+                                            key="t-logout">Exit Chat</span></a>
+
                                 </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -1873,6 +1860,11 @@
 
 
 <script>
+    var chatCode = document.querySelector('[meta-name="chat-code"]').getAttribute('content');
+    if(!chatCode || chatCode == ''){
+        window.location.href = "{{ route('login') }}";
+    }
+
     let inactivityTime = 30 * 1000; // 30 seconds
     let timeout;
 
@@ -1948,95 +1940,6 @@
         }
     }
 
-    // //LOADING MESSAGES THROUGH AJAX CALL
-    // loadAnonymousMessages = async function(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
-    //     const conversationList = document.getElementById('users-conversation');
-    //     const loader = document.getElementById('elmLoader');
-    //     const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
-    //     const receiverPhoneElement = document.getElementById(
-    //         'receiver-phone'); // Add an element for the phone if necessary
-    //     const receiverNameContact = document.getElementById(
-    //         'receiver-name-contact'); // New element for contact header
-    //     const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
-    //     const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
-
-
-    //     const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
-
-
-    //     // Update the receiver's name dynamically
-    //     receiverNameElement.textContent = contactUserName; // Set the receiver's name here
-    //     receiverPhoneElement.textContent = contactUserPhone; //users phone
-    //     receiverNameLink.textContent = contactUserName; // Update the header link
-    //     receiverNameContact.textContent = contactUserName; // Update the contact header name
-    //     receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
-    //     receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
-
-    //     // Show loader and clear previous messages
-    //     loader.style.display = 'block';
-    //     conversationList.innerHTML = '';
-
-    //     try {
-    //         // Make AJAX call to get messages
-    //         // const response = await fetch(`/messages/${contactUserId}`, {
-    //         //     method: 'GET',
-    //         //     headers: {
-    //         //         'Content-Type': 'application/json',
-    //         //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-    //         //             'content')
-    //         //     }
-    //         // });
-
-    //         // if (!response.ok) {
-    //         //     alert('Failed to load messages.');
-    //         //     return;
-    //         // }
-
-    //         // const data = await response.json();
-
-    //         // Hide loader
-    //         // loader.style.display = 'none';
-
-    //         // if (data.messages.length === 0) {
-    //         //     conversationList.innerHTML = '<li class="text-center text-muted">No messages found</li>';
-    //         //     return;
-    //         // }
-
-    //         // Append messages to the conversation list
-    //         // data.messages.forEach(message => {
-    //         //     const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
-    //         //     const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' :
-    //         //         'bg-light';
-    //         //     const messageHTML = `
-    //         //     <li class="d-flex ${alignment} my-2">
-    //         //         <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
-    //         //             <p class="mb-0">${message.message}</p>
-    //         //             <small class="text-muted">${message.created_at}</small>
-    //         //         </div>
-    //         //     </li>
-    //         // `;
-    //         //     conversationList.insertAdjacentHTML('beforeend', messageHTML);
-    //         // });
-    //     // } catch (error) {
-    //     //     console.error('Error:', error);
-    //     //     alert('An error occurred while loading messages.');
-    //     } finally {
-    //         loader.style.display = 'none';
-    //     }
-
-    // }
-
-
-    // send anonymous chat message
-
-     //chat form
-    //  var currentChatId = "users-chat";
-    // var currentSelectedChat = "users";
-    //  var anonymousChatForm = document.querySelector("#anonymous-chatinput-form");
-    // var chatInput = document.querySelector("#chat-input");
-    // var chatInputfeedback = document.querySelector(".chat-input-feedback");
-    // const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
-
     function currentTime() {
         var ampm = new Date().getHours() >= 12 ? "pm" : "am";
         var hour =
@@ -2056,130 +1959,6 @@
     setInterval(currentTime, 1000);
 
     var messageIds = 0;
-
-    // if (anonymousChatForm) {
-    //     let subscribedChannels = new Set(); // To keep track of the subscribed channels
-    //     //add an item to the List, including to local storage
-    //     anonymousChatForm.addEventListener("submit", function (e) {
-    //         e.preventDefault();
-
-    //         var isreplyMessage = false;
-    //         var chatId = currentChatId;
-    //         var chatReplyId = currentChatId;
-
-    //         var chatInputValue = chatInput.value
-
-    //         if (chatInputValue.length === 0) {
-    //             chatInputfeedback.classList.add("show");
-    //             setTimeout(function () {
-    //                 chatInputfeedback.classList.remove("show");
-    //             }, 2000);
-
-    //         } else {
-
-    //             const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
-    //             const receiverId = receiverIdInput.value; // Get the receiver's ID dynamically
-    //             console.log(receiverId);
-
-
-    //             const message = chatInputValue;
-    //             if (!message) {
-    //                 alert('Please enter a message.');
-    //                 return;
-    //             }
-
-
-    //             // AJAX call to send the message
-    //             fetch('/anonymous/messages/send', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-    //                 },
-    //                 body: JSON.stringify({
-    //                     code: {{session('chat_code')}}, // Receiver's ID
-    //                     receiver_id: receiverId, // Receiver's ID
-    //                     message: message,
-    //                 }),
-    //             })
-    //                 .then((response) => response.json())
-    //                 .then((data) => {
-    //                     if (data.success) {
-    //                         chatInput.value = '';
-
-    //                         var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
-    //                         if (userId !== receiverId) {
-    //                             console.log('userId:', userId);
-
-    //                             Echo.private(`chat.${receiverId}`)
-    //                                 .listen('MessageSent', (event) => {
-    //                                     console.log('Message received:', event.message);
-
-    //                                     // Get the chat box container where messages are displayed
-    //                                     const chatBox = document.getElementById('users-conversation');
-
-    //                                     // Create the new message element based on the sender
-    //                                     const messageElement = document.createElement('li');
-
-
-    //                                     if (event.receiver_id === userId) {
-
-    //                                         // Sent message (right side)
-    //                                         messageElement.classList.add('chat-list', 'right');
-    //                                         messageElement.innerHTML = `
-    //                                             <div class="conversation-list">
-    //                                                 <div class="user-chat-content">
-    //                                                     <div class="ctext-wrap">
-    //                                                         <div class="ctext-wrap-content" id="${event.message_id}">
-    //                                                             <p class="mb-0 ctext-content">${event.message}</p>
-    //                                                         </div>
-    //                                                         <div class="dropdown align-self-start message-box-drop">
-    //                                                             <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    //                                                                 <i class="ri-more-2-fill"></i>
-    //                                                             </a>
-    //                                                             <div class="dropdown-menu">
-    //                                                                 <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
-    //                                                                 <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
-    //                                                                 <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
-    //                                                                 <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
-    //                                                                 <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
-    //                                                             </div>
-    //                                                         </div>
-    //                                                     </div>
-    //                                                     <div class="conversation-name">
-    //                                                         <span class="d-none name">You</span>
-    //                                                         <small class="text-muted time">${event.time}</small>
-    //                                                         <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
-    //                                                     </div>
-    //                                                 </div>
-    //                                             </div>
-    //                                         `;
-    //                                     }
-
-    //                                     chatBox.appendChild(messageElement);
-    //                                     chatBox.scrollTop = chatBox.scrollHeight;
-    //                                 });
-    //                         };
-
-    //                     } else {
-    //                         alert('Failed to send the message.');
-    //                     }
-    //                 })
-    //                 .catch((error) => console.error('Error:', error));
-
-    //             if (isreplyMessage == true) {
-    //                 getReplyChatList(chatReplyId, chatInputValue);
-    //                 isreplyMessage = false;
-    //             } else {
-    //                 getChatList(chatId, chatInputValue);
-    //             }
-    //             scrollToBottom(chatId || chatReplyId);
-    //         }
-    //         chatInput.value = "";
-
-    //         document.getElementById("close_toggle").click();
-    //     })
-    // }
 
     //message with reply
     var getReplyChatList = function (chatReplyId, chatReplyItems) {
