@@ -11,8 +11,24 @@ File: Chat init js
 const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
 const receiverId = receiverIdInput.value;
 var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+
+
+// Access the encryption key from the meta tag
+const hexKey = document.querySelector('meta[name="encryption-key"]').getAttribute('content');
+const encryptionKey = hexToUint8Array(hexKey)
+
+function hexToUint8Array(hex) {
+    const length = hex.length / 2;
+    const arr = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        arr[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return arr;
+}
+
+
 // pusher code to receive chats for the authenticated users
-Pusher.logToConsole = true;
+Pusher.logToConsole = false;
 
 var pusher = new Pusher('9cf0f60100aceaf813ea', {
     cluster: 'ap2'
@@ -20,9 +36,11 @@ var pusher = new Pusher('9cf0f60100aceaf813ea', {
 
 
 var channel = pusher.subscribe('my-channel');
-channel.bind(`my-event`, function (data) {
+channel.bind(`my-event`,async function (data) {
     const chatBox = document.getElementById('users-conversation');
     const messageElement = document.createElement('li');
+
+    const decryptedMessage = await decryptMessage(data.message, data.iv, encryptionKey);
 
     if (data.receiver_id == userId) {
         messageElement.classList.add('chat-list', 'left');
@@ -33,7 +51,7 @@ channel.bind(`my-event`, function (data) {
                     <div class="user-chat-content">
                         <div class="ctext-wrap">
                             <div class="ctext-wrap-content" id="${data.message_id}">
-                                <p class="mb-0 ctext-content">${data.message}</p>
+                                <p class="mb-0 ctext-content">${decryptedMessage}</p>
                             </div>
                             <div class="dropdown align-self-start message-box-drop">
                                 <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -61,17 +79,204 @@ channel.bind(`my-event`, function (data) {
     chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-// Pusher.logToConsole = true;
+// encrypt the message
+async function encryptMessage(message, encryptionKey) {
+    const encoder = new TextEncoder();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
 
-// var pusher = new Pusher('9cf0f60100aceaf813ea', {
-//     cluster: 'ap2',
-//     authEndpoint: '/broadcasting/auth',
-//     auth: {
-//         headers: {
-//             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-//         }
-//     }
-// });
+    // Import the key into the Web Crypto API
+    const cryptoKey = await crypto.subtle.importKey(
+        "raw", encryptionKey, { name: "AES-GCM" }, false, ["encrypt"]
+    );
+
+    const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        cryptoKey,
+        encoder.encode(message)
+    );
+
+    return {
+        encryptedData: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+        iv: btoa(String.fromCharCode(...iv))
+    };
+}
+
+// decrypt the message
+async function decryptMessage(encryptedData, iv, encryptionKey) {
+    const encryptedBytes = new Uint8Array(atob(encryptedData).split("").map(c => c.charCodeAt(0)));
+    const ivBytes = new Uint8Array(atob(iv).split("").map(c => c.charCodeAt(0)));
+
+    // Import the key into the Web Crypto API
+    const cryptoKey = await crypto.subtle.importKey(
+        "raw", encryptionKey, { name: "AES-GCM" }, false, ["decrypt"]
+    );
+
+    try {
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: ivBytes },
+            cryptoKey,
+            encryptedBytes
+        );
+
+        return new TextDecoder().decode(decrypted);
+    } catch (error) {
+        console.error("Decryption failed:", error);
+        return "Decryption error";
+    }
+}
+
+
+// =============== load messages ===============
+
+async function loadMessages(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
+        const conversationList = document.getElementById('users-conversation');
+        const loader = document.getElementById('elmLoader');
+        const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
+        const receiverPhoneElement = document.getElementById(
+            'receiver-phone'); // Add an element for the phone if necessary
+        const receiverNameContact = document.getElementById(
+            'receiver-name-contact'); // New element for contact header
+        const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
+        const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
+
+
+        const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
+
+
+        // Update the receiver's name dynamically
+        receiverNameElement.textContent = contactUserName; // Set the receiver's name here
+        receiverPhoneElement.textContent = contactUserPhone; //users phone
+        receiverNameLink.textContent = contactUserName; // Update the header link
+        receiverNameContact.textContent = contactUserName; // Update the contact header name
+        receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
+        receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
+
+        // Show loader and clear previous messages
+        loader.style.display = 'block';
+        conversationList.innerHTML = '';
+
+        try {
+            // Make AJAX call to get messages
+            const response = await fetch(`/messages/${contactUserId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                        'content')
+                }
+            });
+
+            if (!response.ok) {
+                alert('Failed to load messages.');
+                return;
+            }
+
+            const data = await response.json();
+
+            // Hide loader
+            loader.style.display = 'none';
+
+            if (data.messages.length === 0) {
+                conversationList.innerHTML = '<li class="text-center text-muted w-100">No messages found</li>';
+                return;
+            }
+            // data.messages.forEach(async (message) => {
+            //     try {
+
+            //         // Decrypt the message content
+            //         const decryptedMessage = await decryptMessage(message.message, message.iv, encryptionKey);
+
+            //         // Determine message alignment based on sender ID
+            //         const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
+            //         const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' : 'bg-light';
+
+            //         // Build the HTML for the message
+            //         const messageHTML = `
+            //             <li class="d-flex ${alignment} my-2">
+            //                 <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
+            //                     <p class="mb-0">${decryptedMessage}</p>
+            //                     <small class="text-muted">${message.created_at}</small>
+            //                 </div>
+            //             </li>
+            //         `;
+
+            //         // Append the message to the conversation list
+            //         conversationList.insertAdjacentHTML('beforeend', messageHTML);
+            //     } catch (error) {
+            //         console.error('Error during decryption:', error);
+            //     }
+            // });
+
+
+            data.messages.forEach(async (message) => {
+                try {
+                    // Decrypt the message content
+                    const decryptedMessage = await decryptMessage(message.message, message.iv, encryptionKey);
+
+                    // Determine if the message is sent or received
+                    const isSent = message.sender_id === data.current_user_id;
+                    const messageId = message.message_id;
+
+                    // Create message element
+                    const messageElement = document.createElement("li");
+                    messageElement.classList.add("chat-list", isSent ? "right" : "left");
+                    messageElement.id = `chat-list-${messageId}`;
+
+                    // Set message HTML
+                    messageElement.innerHTML = `
+                        <div class="conversation-list">
+                            ${!isSent ? `
+                            <div class="chat-avatar">
+                                <img src="${message.sender_avatar}" alt="Sender Avatar">
+                            </div>
+                            ` : ""}
+                            <div class="user-chat-content">
+                                <div class="ctext-wrap">
+                                    <div class="ctext-wrap-content">
+                                        <p class="mb-0 ctext-content">
+                                            ${decryptedMessage}
+                                        </p>
+                                    </div>
+                                    <div class="dropdown align-self-start message-box-drop">
+                                        <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="ri-more-2-fill"></i>
+                                        </a>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                                            <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
+                                            <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                                            <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
+                                            <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="conversation-name">
+                                    <small class="text-muted time">${message.created_at}</small>
+                                    <span class="text-success check-message-icon"><i class="bx bx-check${isSent ? "-double" : ""}"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Append the message to the conversation list
+                    conversationList.appendChild(messageElement);
+                } catch (error) {
+                    console.error("Error during decryption:", error);
+                }
+            });
+
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while loading messages.');
+        } finally {
+            loader.style.display = 'none';
+        }
+
+}
+// =============== load messages end ===============
+
+
 
 // Get the chat code
 const chatCode = "{{ session('chat_code') }}";
@@ -79,7 +284,9 @@ const chatCode = "{{ session('chat_code') }}";
 
 var anonymousChannelChat = pusher.subscribe(`anonymous-chat`);
 
-anonymousChannelChat.bind("anonymous-message-sent", function (data) {
+anonymousChannelChat.bind("anonymous-message-sent",async function (data) {
+    const decryptedMessage = await decryptMessage(data.message, data.iv, encryptionKey);
+
     if (data.receiver_id == userId) { // Only display if the user is the intended receiver
         const chatBox = document.getElementById('users-conversation');
         const messageElement = document.createElement('li');
@@ -92,7 +299,7 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
                 <div class="user-chat-content">
                     <div class="ctext-wrap">
                         <div class="ctext-wrap-content" id="">
-                            <p class="mb-0 ctext-content">${data.message}</p>
+                            <p class="mb-0 ctext-content">${decryptedMessage}</p>
                         </div>
                         <div class="dropdown align-self-start message-box-drop">
                             <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -574,7 +781,7 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
 
 
     //LOADING MESSAGES THROUGH AJAX CALL
-    loadAnonymousMessages = async function(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
+    loadAnonymousMessages = async function (contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
         const conversationList = document.getElementById('users-conversation');
         const loader = document.getElementById('elmLoader');
         const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
@@ -637,23 +844,27 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
                     alert('Please enter a message.');
                     return;
                 }
-                
-                if(!chatCode || chatCode == null){
+
+                if (!chatCode || chatCode == null) {
                     window.location.href = '/login';
                 }
 
+                encryptMessage(message, encryptionKey).then(encryptedPackage => {
+
                 // AJAX call to send the message
-                fetch('/anonymous/messages/send', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({
-                        code: chatCode, // Receiver's ID
-                        receiver_id: receiverId, // Receiver's ID
-                        message: message,
-                    }),
+                    fetch('/anonymous/messages/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            code: chatCode, // Receiver's ID
+                            receiver_id: receiverId,
+                            message: encryptedPackage.encryptedData,
+                            iv: encryptedPackage.iv,
+                        }),
+                    })
                 })
                     .then((response) => response.json())
                     .then((data) => {
@@ -752,124 +963,32 @@ anonymousChannelChat.bind("anonymous-message-sent", function (data) {
                     return;
                 }
 
+                encryptMessage(message, encryptionKey).then(encryptedPackage => {
 
                 // AJAX call to send the message
-                fetch('/messages/send', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({
-                        receiver_id: receiverId, // Receiver's ID
-                        message: message,
-                    }),
-                })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        if (data.success) {
-                            chatInput.value = '';
-
-                            // if (!subscribedChannels.has(receiverId)) {
-
-                            // var userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
-                            // if (userId !== receiverId) {
-                            //     console.log('userId:', userId);
-
-                            //     Echo.private(`chat.${receiverId}`)
-                            //         .listen('MessageSent', (event) => {
-                            //             console.log('Message received:', event.message);
-
-                            //             // Get the chat box container where messages are displayed
-                            //             const chatBox = document.getElementById('users-conversation');
-
-                            //             // Create the new message element based on the sender
-                            //             const messageElement = document.createElement('li');
-
-                            //             console.log('appending..');
-
-                            //             if (event.receiver_id === userId) {
-
-                            //                 // Sent message (right side)
-                            //                 messageElement.classList.add('chat-list', 'right');
-                            //                 messageElement.innerHTML = `
-                            //                     <div class="conversation-list">
-                            //                         <div class="user-chat-content">
-                            //                             <div class="ctext-wrap">
-                            //                                 <div class="ctext-wrap-content" id="${event.message_id}">
-                            //                                     <p class="mb-0 ctext-content">${event.message}</p>
-                            //                                 </div>
-                            //                                 <div class="dropdown align-self-start message-box-drop">
-                            //                                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            //                                         <i class="ri-more-2-fill"></i>
-                            //                                     </a>
-                            //                                     <div class="dropdown-menu">
-                            //                                         <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
-                            //                                         <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
-                            //                                         <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
-                            //                                         <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
-                            //                                         <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
-                            //                                     </div>
-                            //                                 </div>
-                            //                             </div>
-                            //                             <div class="conversation-name">
-                            //                                 <span class="d-none name">You</span>
-                            //                                 <small class="text-muted time">${event.time}</small>
-                            //                                 <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
-                            //                             </div>
-                            //                         </div>
-                            //                     </div>
-                            //                 `;
-                            //             }
-                            //             //  else {
-                            //             //     // Received message (left side)
-                            //             //     messageElement.classList.add('chat-list', 'left');
-                            //             //     messageElement.innerHTML = `
-                            //             //     <div class="conversation-list">
-                            //             //         <div class="chat-avatar">
-                            //             //             <img src="${event.sender_avatar}" alt="Sender Avatar">
-                            //             //         </div>
-                            //             //         <div class="user-chat-content">
-                            //             //             <div class="ctext-wrap">
-                            //             //                 <div class="ctext-wrap-content" id="${event.message_id}">
-                            //             //                     <p class="mb-0 ctext-content">${event.message}</p>
-                            //             //                 </div>
-                            //             //                 <div class="dropdown align-self-start message-box-drop">
-                            //             //                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            //             //                         <i class="ri-more-2-fill"></i>
-                            //             //                     </a>
-                            //             //                     <div class="dropdown-menu">
-                            //             //                         <a class="dropdown-item reply-message" href="#"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
-                            //             //                         <a class="dropdown-item" href="#"><i class="ri-share-line me-2 text-muted align-bottom"></i>Forward</a>
-                            //             //                         <a class="dropdown-item copy-message" href="#"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
-                            //             //                         <a class="dropdown-item" href="#"><i class="ri-bookmark-line me-2 text-muted align-bottom"></i>Bookmark</a>
-                            //             //                         <a class="dropdown-item delete-item" href="#"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
-                            //             //                     </div>
-                            //             //                 </div>
-                            //             //             </div>
-                            //             //             <div class="conversation-name">
-                            //             //                 <span class="d-none name">${event.sender_name}</span>
-                            //             //                 <small class="text-muted time">${event.time}</small>
-                            //             //                 <span class="text-success check-message-icon"><i class="bx bx-check-double"></i></span>
-                            //             //             </div>
-                            //             //         </div>
-                            //             //     </div>
-                            //             // `;
-                            //             // }
-                            //             chatBox.appendChild(messageElement);
-                            //             chatBox.scrollTop = chatBox.scrollHeight;
-                            //         });
-                            // };
-                            // Mark the channel as subscribed
-                            // subscribedChannels.add(receiverId);
-                            // }
-
-                        } else {
-                            alert('Failed to send the message.');
-                        }
+                    fetch('/messages/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            receiver_id: receiverId, // Receiver's ID
+                            message: encryptedPackage.encryptedData, // Encrypted message
+                            iv: encryptedPackage.iv, // IV used for encryption
+                        }),
                     })
-                    .catch((error) => console.error('Error:', error));
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                chatInput.value = '';
+                            } else {
+                                alert('Failed to send the message.');
+                            }
+                        })
+                        .catch((error) => console.error('Error:', error));
 
+                    });
                 if (isreplyMessage == true) {
                     getReplyChatList(chatReplyId, chatInputValue);
                     isreplyMessage = false;

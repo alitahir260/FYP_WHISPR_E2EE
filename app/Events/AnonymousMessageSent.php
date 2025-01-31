@@ -41,6 +41,7 @@ class AnonymousMessageSent implements ShouldBroadcast
             'code' => $this->message['code'],
             'receiver_id' => $this->message['receiver_id'],
             'message' => $this->message['message'],
+            'iv' => $this->message['iv'],
             'time' => $this->message['time']->toDateTimeString(),
         ];
     }

@@ -79,12 +79,14 @@ class AnonymousController extends Controller
             'code' => 'required',
             'receiver_id' => 'required',
             'message' => 'required|string|max:1000',
+            'iv' => 'required|string',
         ]);
 
         $data = [
             'code' => session('chat_code'),
             'receiver_id' => $validated['receiver_id'],
             'message' => $validated['message'],
+            'iv' => $validated['iv'],
             'time' => now(),
         ];
 

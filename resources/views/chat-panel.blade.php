@@ -10,8 +10,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
-    <meta content="{{auth()->user() ? auth()->user()->id : $user->id }}" name="user-id" />
+    <meta content="{{ auth()->user() ? auth()->user()->id : $user->id }}" name="user-id" />
     <meta content="" name="chat-code" />
+    <meta name="encryption-key" content="{{ env('ENCRYPTION_KEY') }}">
 
     <!-- App favicon -->
     <link rel="shortcut icon" href="http://127.0.0.1:8000/build/images/favicon.ico">
@@ -288,10 +289,10 @@
                             @if (Auth::user())
                                 <div class="dropdown-menu dropdown-menu-end">
                                     <!-- item-->
-                                    <h6 class="dropdown-header">Welcome {{ Auth::user()->name}}</h6>
+                                    <h6 class="dropdown-header">Welcome {{ Auth::user()->name }}</h6>
                                     <a class="dropdown-item" href="{{ route('profile.edit') }}"><i
-                                            class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
-                                            class="align-middle">Profile</span></a>
+                                            class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
+                                        <span class="align-middle">Profile</span></a>
 
                                     <a class="dropdown-item" href="{{ route('profile.settings') }}"><span
                                             class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
@@ -515,7 +516,8 @@
                                                             onclick="loadMessages({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->phone) }}' ,  '{{ addslashes($user->status) }}')">
                                                             <div class="d-flex align-items-center">
                                                                 <h5 class="text-truncate fs-14 mb-0">
-                                                                    {{ Auth::user() ? $user->name ?? 'No Name' : 'Anonymous User' }}</h5>
+                                                                    {{ Auth::user() ? $user->name ?? 'No Name' : 'Anonymous User' }}
+                                                                </h5>
                                                             </div>
                                                             <div>
                                                                 <span
@@ -560,7 +562,8 @@
                                                         onclick="loadMessages({{ $contact->contact_user_id }})">
                                                         <div class="d-flex align-items-center">
                                                             <h5 class="text-truncate fs-14 mb-0">
-                                                                {{ Auth::user() ? $contact->name ?? 'No Name' : 'Anonymous User' }}</h5>
+                                                                {{ Auth::user() ? $contact->name ?? 'No Name' : 'Anonymous User' }}
+                                                            </h5>
                                                         </div>
                                                         <div>
                                                             <span class="badge bg-soft-primary rounded-pill">0</span>
@@ -1867,6 +1870,10 @@
     <!-- chat init js -->
     <script src="http://127.0.0.1:8000/build/js/pages/chat.init.js"></script>
     {{-- <script src="http://127.0.0.1:8000/build/js/app.js"></script> --}}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"
+        integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 
 </html>
@@ -1952,82 +1959,88 @@
 
 
     //LOADING MESSAGES THROUGH AJAX CALL
-    async function loadMessages(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
-        const conversationList = document.getElementById('users-conversation');
-        const loader = document.getElementById('elmLoader');
-        const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
-        const receiverPhoneElement = document.getElementById(
-            'receiver-phone'); // Add an element for the phone if necessary
-        const receiverNameContact = document.getElementById(
-            'receiver-name-contact'); // New element for contact header
-        const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
-        const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
+    // async function loadMessages(contactUserId, contactUserName, contactUserPhone, contactUserStatus) {
+    //     const conversationList = document.getElementById('users-conversation');
+    //     const loader = document.getElementById('elmLoader');
+    //     const receiverNameElement = document.getElementById('receiver-name'); // Receiver's name placeholder
+    //     const receiverPhoneElement = document.getElementById(
+    //         'receiver-phone'); // Add an element for the phone if necessary
+    //     const receiverNameContact = document.getElementById(
+    //         'receiver-name-contact'); // New element for contact header
+    //     const receiverStatusElement = document.getElementById('receiver-status'); // Receiver's status placeholder
+    //     const receiverIdInput = document.getElementById('receiver_id'); // Hidden input field for receiver ID
 
 
-        const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
+    //     const receiverNameLink = document.getElementById('receiver-name-link'); // Link in the header
 
 
-        // Update the receiver's name dynamically
-        receiverNameElement.textContent = contactUserName; // Set the receiver's name here
-        receiverPhoneElement.textContent = contactUserPhone; //users phone
-        receiverNameLink.textContent = contactUserName; // Update the header link
-        receiverNameContact.textContent = contactUserName; // Update the contact header name
-        receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
-        receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
+    //     // Update the receiver's name dynamically
+    //     receiverNameElement.textContent = contactUserName; // Set the receiver's name here
+    //     receiverPhoneElement.textContent = contactUserPhone; //users phone
+    //     receiverNameLink.textContent = contactUserName; // Update the header link
+    //     receiverNameContact.textContent = contactUserName; // Update the contact header name
+    //     receiverStatusElement.textContent = contactUserStatus; // Set the receiver's status here
+    //     receiverIdInput.value = contactUserId; // Update the hidden input field with receiver ID
 
-        // Show loader and clear previous messages
-        loader.style.display = 'block';
-        conversationList.innerHTML = '';
+    //     // Show loader and clear previous messages
+    //     loader.style.display = 'block';
+    //     conversationList.innerHTML = '';
 
-        try {
-            // Make AJAX call to get messages
-            const response = await fetch(`/messages/${contactUserId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                        'content')
-                }
-            });
+    //     try {
+    //         // Make AJAX call to get messages
+    //         const response = await fetch(`/messages/${contactUserId}`, {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+    //                     'content')
+    //             }
+    //         });
 
-            if (!response.ok) {
-                alert('Failed to load messages.');
-                return;
-            }
+    //         if (!response.ok) {
+    //             alert('Failed to load messages.');
+    //             return;
+    //         }
 
-            const data = await response.json();
+    //         const data = await response.json();
 
-            // Hide loader
-            loader.style.display = 'none';
+    //         // Hide loader
+    //         loader.style.display = 'none';
 
-            if (data.messages.length === 0) {
-                conversationList.innerHTML = '<li class="text-center text-muted">No messages found</li>';
-                return;
-            }
+    //         if (data.messages.length === 0) {
+    //             conversationList.innerHTML = '<li class="text-center text-muted">No messages found</li>';
+    //             return;
+    //         }
+            
+    //         // Append messages to the conversation list
+    //         data.messages.forEach(message => {
+    //             // Access the encryption key from the meta tag
+    //             // const hexKey = document.querySelector('meta[name="encryption-key"]').getAttribute('content');
+    //             // const encryptionKey = hexToUint8Array(hexKey)
 
-            // Append messages to the conversation list
-            data.messages.forEach(message => {
-                const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
-                const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' :
-                    'bg-light';
-                const messageHTML = `
-                <li class="d-flex ${alignment} my-2">
-                    <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
-                        <p class="mb-0">${message.message}</p>
-                        <small class="text-muted">${message.created_at}</small>
-                    </div>
-                </li>
-            `;
-                conversationList.insertAdjacentHTML('beforeend', messageHTML);
-            });
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading messages.');
-        } finally {
-            loader.style.display = 'none';
-        }
+    //             const decryptedMessage = decryptMessage(data.message, data.iv, encryptionKey);    
 
-    }
+    //             const alignment = message.sender_id === data.current_user_id ? 'text-end' : 'text-start';
+    //             const bgClass = message.sender_id === data.current_user_id ? 'bg-primary text-white' :
+    //                 'bg-light';
+    //             const messageHTML = `
+    //             <li class="d-flex ${alignment} my-2">
+    //                 <div class="p-2 rounded ${bgClass}" style="max-width: 75%;">
+    //                     <p class="mb-0">${decryptedMessage}</p>
+    //                     <small class="text-muted">${message.created_at}</small>
+    //                 </div>
+    //             </li>
+    //         `;
+    //             conversationList.insertAdjacentHTML('beforeend', messageHTML);
+    //         });
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         alert('An error occurred while loading messages.');
+    //     } finally {
+    //         loader.style.display = 'none';
+    //     }
+
+    // }
 
     // const receiverIdInput = document.getElementById('receiver_id'); // Get the hidden input field
     //             const receiverId = receiverIdInput.value; // Get the receiver's ID dynamically

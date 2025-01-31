@@ -12,6 +12,8 @@
     <meta content="Themesbrand" name="author" />
     <meta content="{{$user->id }}" name="user-id" />
     <meta content="{{ session('chat_code') }}" name="chat-code" />
+    <meta name="encryption-key" content="{{ env('ENCRYPTION_KEY') }}">
+
     <!-- App favicon -->
     <link rel="shortcut icon" href="http://127.0.0.1:8000/build/images/favicon.ico">
     <link rel="stylesheet" href="http://127.0.0.1:8000/build/libs/glightbox/css/glightbox.min.css">
