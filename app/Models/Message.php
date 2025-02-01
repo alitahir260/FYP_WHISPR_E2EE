@@ -23,6 +23,6 @@ class Message extends Model
 
     public function getCreatedAtAttribute($value)
     {
-        return \Carbon\Carbon::parse($value)->toDateTimeString();
+        return \Carbon\Carbon::parse($value)->format('h:i:s a');
     }
 }

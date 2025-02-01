@@ -43,9 +43,9 @@ class MessageSent implements ShouldBroadcast
             'receiver_id' => $this->message->receiver_id,
             'message' => $this->message->message,
             'iv' => $this->message->iv,
-            'auth_tag' => $this->message->auth_tag, 
+            'auth_tag' => $this->message->auth_tag,
             'sender_avatar' => $this->user->profile_picture ? asset('/storage/' . $this->user->profile_picture) : 'http://127.0.0.1:8000/build/images/users/avatar-2.jpg',
-            'time' => $this->message->created_at->toDateTimeString(),
+            'time' => $this->message->created_at,
         ];
     }
 }
